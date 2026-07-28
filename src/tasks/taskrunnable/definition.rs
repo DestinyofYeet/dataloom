@@ -1,9 +1,9 @@
 use std::any::Any;
 
-use crate::tasks::{task::TaskResult, worker_logger::WorkerLogger};
+use crate::tasks::{runnable_info::RunnableInfo, task::TaskResult, worker_logger::WorkerLogger};
 
 pub trait TaskRunnable {
-    fn run(&mut self, logger: WorkerLogger) -> Box<dyn Any + Send + Sync>;
+    fn run(&mut self, info: RunnableInfo) -> Box<dyn Any + Send + Sync>;
 }
 
 pub trait TaskResultable {

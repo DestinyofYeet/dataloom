@@ -57,7 +57,7 @@ impl Worker {
                                 *current_task.lock().expect("to get lock") = Some(task.get_id());
                             }
                             task.set_state(TaskState::Running);
-                            let result = task.run(id);
+                            let result = task.run(id, to_handler.clone());
                             task.set_result(result);
                             task.set_state(TaskState::Done);
                             match to_handler.send(TaskEvent::TaskDone(task.get_id())) {

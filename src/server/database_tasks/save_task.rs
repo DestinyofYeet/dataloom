@@ -8,6 +8,7 @@ use crate::{
     },
     server::database_strategy::{DatabaseStrategy, DatabaseStrategyError},
     tasks::{
+        runnable_info::RunnableInfo,
         taskrunnable::{TaskResultable, TaskRunnable},
         worker_logger::WorkerLogger,
     },
@@ -41,7 +42,8 @@ where
     D: DatabaseStrategy,
     M: Model + SaveData + FromIter + ValidateSaveData + Send + Sync,
 {
-    fn run(&mut self, logger: WorkerLogger) -> Box<dyn Any + Send + Sync> {
+    fn run(&mut self, info: RunnableInfo) -> Box<dyn Any + Send + Sync> {
+        let logger = info.get_logger();
         let conn = self.db.get_connection();
         match self.db.save_model(&conn, &mut self.model) {
             Ok(_) => {}

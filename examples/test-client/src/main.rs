@@ -17,6 +17,7 @@ use django_rs::{
     },
     tasks::{
         logstrategy::{LogStrategyType, default_strategies::tracing_strategy::TracingStrategy},
+        runnable_info::RunnableInfo,
         taskrunnable::{TaskResultable, TaskRunnable},
         worker_logger::WorkerLogger,
     },
@@ -46,7 +47,8 @@ impl PrintTask {
 }
 
 impl TaskRunnable for PrintTask {
-    fn run(&mut self, logger: WorkerLogger) -> Box<dyn Any + Sync + Send> {
+    fn run(&mut self, info: RunnableInfo) -> Box<dyn Any + Sync + Send> {
+        let logger = info.get_logger();
         thread::sleep(Duration::from_millis(300));
         logger.info("print");
 
@@ -65,7 +67,8 @@ pub struct LongTask {
 }
 
 impl TaskRunnable for LongTask {
-    fn run(&mut self, logger: WorkerLogger) -> Box<dyn Any + Send + Sync> {
+    fn run(&mut self, info: RunnableInfo) -> Box<dyn Any + Send + Sync> {
+        let logger = info.get_logger();
         loop {
             logger.info("long task");
             thread::sleep(Duration::from_secs(2));
@@ -77,6 +80,11 @@ impl TaskRunnable for LongTask {
             }
         }
 
+        match info.spawn_task(ShortTask {}) {
+            Ok(_) => {}
+            Err(e) => logger.error(&format!("Failed to spawn short task: {e}")),
+        }
+
         Box::new(())
     }
 }
@@ -85,6 +93,22 @@ impl TaskResultable for LongTask {
     type Result = ();
 
     fn downcast(_result: django_rs::tasks::task::TaskResult) -> Self::Result {}
+}
+
+pub struct ShortTask {}
+
+impl TaskRunnable for ShortTask {
+    fn run(&mut self, info: RunnableInfo) -> Box<dyn Any + Send + Sync> {
+        info.get_logger().info("short task");
+
+        Box::new(())
+    }
+}
+
+impl TaskResultable for ShortTask {
+    type Result = ();
+
+    fn downcast(_: django_rs::tasks::task::TaskResult) -> Self::Result {}
 }
 
 #[derive(Debug, FromIter, SaveData, Serialize)]
@@ -130,18 +154,6 @@ impl Model for Group {
         "id"
     }
 }
-
-// impl SaveData for Group {
-//     fn get_save_data(&self) -> Vec<SaveModel> {
-//         vec![
-//             SaveModel::new(Self::get_latest_column_name("id").unwrap(), self.id),
-//             SaveModel::new(
-//                 Self::get_latest_column_name("name").unwrap(),
-//                 self.name.clone().into(),
-//             ),
-//         ]
-//     }
-// }
 
 #[derive(Debug, FromIter, SaveData)]
 pub struct User {
@@ -206,66 +218,6 @@ impl Model for User {
         "id"
     }
 }
-
-// impl FromIter for User {
-//     fn from_iter(iter: impl Iterator<Item = (String, String)>) -> Option<Self>
-//     where
-//         Self: Sized,
-//     {
-//         let mut id: Option<i64> = None;
-//         let mut username: Option<String> = None;
-//         let mut email: Option<String> = None;
-//         let mut created: Option<DateTime<Utc>> = None;
-//         let mut group_id: Option<i64> = None;
-
-//         for (key, value) in iter {
-//             match value {
-//                 String { .. } if matches!(Self::get_latest_column_name("id"), Some(id_col) if id_col == key) => {
-//                     id = value.parse::<i64>().ok()
-//                 }
-
-//                 String { .. } if matches!(Self::get_latest_column_name("email"), Some(email_col) if email_col == key) =>
-//                 {
-//                     email = Some(value);
-//                 }
-
-//                 String { .. } if matches!(Self::get_latest_column_name("username"), Some(username_col) if username_col == key) =>
-//                 {
-//                     username = Some(value);
-//                 }
-
-//                 String { .. } if matches!(Self::get_latest_column_name("created"), Some(created_col) if created_col == key) =>
-//                 {
-//                     created = DateTime::from_str(&value).ok();
-//                 }
-
-//                 String { .. } if matches!(Self::get_latest_column_name("group_id"), Some(group_col) if group_col == key ) =>
-//                 {
-//                     group_id = value.parse().ok();
-//                 }
-
-//                 _ => {}
-//             }
-//         }
-
-//         if let Some(id) = id
-//             && let Some(username) = username
-//             && let Some(email) = email
-//             && let Some(created) = created
-//             && let Some(group_id) = group_id
-//         {
-//             return Some(Self {
-//                 id: Some(id),
-//                 username,
-//                 email,
-//                 created,
-//                 group_id,
-//             });
-//         }
-
-//         None
-//     }
-// }
 
 fn main() -> Result<(), anyhow::Error> {
     let args = Args::parse();
@@ -347,11 +299,12 @@ fn main() -> Result<(), anyhow::Error> {
 
     test(&server);
 
-    server.shutdown()?;
     {
         println!("Stopping long task");
         *stop.lock().expect("to get lock") = true;
     }
+    std::thread::sleep(Duration::from_secs(5));
+    server.shutdown()?;
 
     Ok(())
 }
