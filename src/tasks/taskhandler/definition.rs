@@ -38,7 +38,7 @@ pub struct TaskHandler {
 
     pub(super) to_handler: Sender<TaskEvent>,
 
-    pub(super) handle: JoinHandle<()>,
+    pub(super) handle: Option<JoinHandle<()>>,
 }
 
 impl TaskHandler {
@@ -62,7 +62,7 @@ impl TaskHandler {
             max_workers,
             log_strategy,
             to_handler: sender,
-            handle,
+            handle: Some(handle),
         }
     }
 }

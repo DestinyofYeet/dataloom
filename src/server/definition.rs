@@ -11,6 +11,7 @@ where
 {
     task_handler: TaskHandler,
     database_strategy: Arc<D>,
+    has_shutdown: bool,
 }
 
 impl<D> DjangoServer<D>
@@ -25,6 +26,7 @@ where
         Ok(Self {
             task_handler: TaskHandler::new(workers, Arc::new(logging_strategy)),
             database_strategy: Arc::new(database_strategy),
+            has_shutdown: false,
         })
     }
 
@@ -36,8 +38,10 @@ where
         &self.task_handler
     }
 
-    pub fn shutdown(self) -> Result<(), ServerError> {
-        self.task_handler.shutdown()?;
+    pub fn shutdown(&mut self) -> Result<(), ServerError> {
+        if !self.has_shutdown {
+            self.task_handler.shutdown()?;
+        }
         Ok(())
     }
 }

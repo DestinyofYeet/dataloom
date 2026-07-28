@@ -86,7 +86,7 @@ impl Model for TestModel {
 
 #[test]
 pub fn test_save_and_retrieve() {
-    let server = setup_sqlite_server();
+    let mut server = setup_sqlite_server();
     let db = server.get_database();
 
     db.migrate_model::<TestModel>().unwrap();
@@ -112,7 +112,7 @@ pub fn test_save_and_retrieve() {
 
 #[test]
 pub fn test_save_and_retrieve_task() {
-    let server = setup_sqlite_server();
+    let mut server = setup_sqlite_server();
     let task_handler = server.get_task_handler();
     let db = server.get_database();
 

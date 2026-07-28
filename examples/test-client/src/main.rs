@@ -282,7 +282,8 @@ fn main() -> Result<(), anyhow::Error> {
         .with_env_filter(EnvFilter::new(level))
         .init();
 
-    let server = DjangoServer::new(8, TracingStrategy {}, SqliteStrategy::new("tmp/db.sqlite"))?;
+    let mut server =
+        DjangoServer::new(8, TracingStrategy {}, SqliteStrategy::new("tmp/db.sqlite"))?;
 
     let mut group = Group {
         id: None,

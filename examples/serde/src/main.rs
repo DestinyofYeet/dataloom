@@ -143,7 +143,7 @@ impl Model for Test {
 // }
 
 fn main() {
-    let server =
+    let mut server =
         DjangoServer::new(8, TracingStrategy {}, SqliteStrategy::new("./test.db")).unwrap();
 
     let db = server.get_database();
