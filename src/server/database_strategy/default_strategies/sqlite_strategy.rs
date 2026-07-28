@@ -606,7 +606,22 @@ impl DatabaseStrategy for SqliteStrategy {
             })
             .map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
 
-        let models = rows.filter_map(|e| e.unwrap()).collect_vec();
+        let models = {
+            let mut models = Vec::new();
+            for row in rows {
+                let row = row.map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
+                match row {
+                    Some(value) => {
+                        models.push(value);
+                    }
+                    None => {
+                        models = Vec::new();
+                        break;
+                    }
+                }
+            }
+            models
+        };
 
         trace!("Found {} results", models.len());
 
