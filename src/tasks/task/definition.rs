@@ -1,13 +1,19 @@
-use std::{any::Any, sync::mpsc::Sender};
+use std::{
+    any::Any,
+    sync::{Arc, mpsc::Sender},
+};
 
 use uuid::Uuid;
 
-use crate::tasks::{
-    logstrategy::LogStrategyType, runnable_info::RunnableInfo, taskhandler::TaskEvent,
-    taskrunnable::TaskRunnable, worker_logger::WorkerLogger,
+use crate::{
+    server::database_strategy::DatabaseStrategy,
+    tasks::{
+        logstrategy::LogStrategyType, runnable_info::RunnableInfo, taskhandler::TaskEvent,
+        taskrunnable::TaskRunnable, worker_logger::WorkerLogger,
+    },
 };
 
-pub type Runnable = Box<dyn TaskRunnable + Sync + Send>;
+pub type Runnable<D> = Box<dyn TaskRunnable<D> + Sync + Send>;
 
 pub type TaskResult = Box<dyn Any + Send + Sync>;
 
@@ -18,16 +24,22 @@ pub enum TaskState {
     Done,
 }
 
-pub(crate) struct Task {
+pub(crate) struct Task<D>
+where
+    D: DatabaseStrategy,
+{
     id: Uuid,
-    runnable: Runnable,
+    runnable: Runnable<D>,
     logger: LogStrategyType,
     state: TaskState,
     result: Option<TaskResult>,
 }
 
-impl Task {
-    pub(crate) fn new(runnable: Runnable, logger: LogStrategyType) -> Self {
+impl<D> Task<D>
+where
+    D: DatabaseStrategy,
+{
+    pub(crate) fn new(runnable: Runnable<D>, logger: LogStrategyType) -> Self {
         Self {
             id: Uuid::new_v4(),
             runnable,
@@ -37,9 +49,14 @@ impl Task {
         }
     }
 
-    pub(crate) fn run(&mut self, worker_id: u64, to_handler: Sender<TaskEvent>) -> TaskResult {
+    pub(crate) fn run(
+        &mut self,
+        worker_id: u64,
+        to_handler: Sender<TaskEvent<D>>,
+        database_handle: Arc<D>,
+    ) -> TaskResult {
         let logger = WorkerLogger::new(self.logger.clone(), worker_id);
-        let info = RunnableInfo::new(logger, to_handler);
+        let info = RunnableInfo::new(logger, to_handler, database_handle);
         self.runnable.run(info)
     }
 

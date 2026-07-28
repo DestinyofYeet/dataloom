@@ -18,7 +18,7 @@ fn get_test_dir() -> PathBuf {
 
 pub fn setup_server<D>(strategy: D) -> DjangoServer<D>
 where
-    D: DatabaseStrategy,
+    D: DatabaseStrategy + 'static,
 {
     DjangoServer::new(1, TracingStrategy {}, strategy).expect("to create server")
 }

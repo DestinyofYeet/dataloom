@@ -1,8 +1,15 @@
-use std::sync::mpsc::Sender;
+use std::sync::{Arc, mpsc::Sender};
 
-use crate::tasks::{taskhandler::TaskEvent, worker_logger::WorkerLogger};
+use crate::{
+    server::database_strategy::DatabaseStrategy,
+    tasks::{taskhandler::TaskEvent, worker_logger::WorkerLogger},
+};
 
-pub struct RunnableInfo {
+pub struct RunnableInfo<D>
+where
+    D: DatabaseStrategy,
+{
     pub(super) logger: WorkerLogger,
-    pub(super) to_handler: Sender<TaskEvent>,
+    pub(super) to_handler: Sender<TaskEvent<D>>,
+    pub(super) database_handle: Arc<D>,
 }

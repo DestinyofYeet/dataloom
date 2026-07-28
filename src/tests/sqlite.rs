@@ -125,7 +125,7 @@ pub fn test_save_and_retrieve_task() {
         extra_data: Data::One("weeee".to_string()),
     };
 
-    let save_task = SaveModelTask::new(db.clone(), model);
+    let save_task = SaveModelTask::new(model);
 
     let task = task_handler.spawn_task(save_task).unwrap();
 
@@ -135,8 +135,7 @@ pub fn test_save_and_retrieve_task() {
 
     let result = task.get_result();
 
-    let get_task = GetModelTask::<SqliteStrategy, TestModel>::new(
-        db.clone(),
+    let get_task = GetModelTask::<TestModel>::new(
         SearchQuery::empty().add_constraint(("id", result.unwrap())),
     );
 

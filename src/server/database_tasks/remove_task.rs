@@ -6,37 +6,34 @@ use crate::{
     tasks::{runnable_info::RunnableInfo, taskrunnable::TaskRunnable, worker_logger::WorkerLogger},
 };
 
-pub struct RemoveModelTask<D, M>
+pub struct RemoveModelTask<M>
 where
-    D: DatabaseStrategy,
     M: Model,
 {
-    db: Arc<D>,
     search: SearchQuery,
     marker: PhantomData<M>,
 }
 
-impl<D, M> RemoveModelTask<D, M>
+impl<M> RemoveModelTask<M>
 where
-    D: DatabaseStrategy,
     M: Model,
 {
-    pub fn new(db: Arc<D>, search: SearchQuery) -> Box<Self> {
+    pub fn new(search: SearchQuery) -> Box<Self> {
         Box::new(Self {
-            db,
             search,
             marker: PhantomData,
         })
     }
 }
 
-impl<D, M> TaskRunnable for RemoveModelTask<D, M>
+impl<D, M> TaskRunnable<D> for RemoveModelTask<M>
 where
     D: DatabaseStrategy,
     M: Model,
 {
-    fn run(&mut self, _info: RunnableInfo) -> Box<dyn Any + Send + Sync> {
-        let conn = self.db.get_connection();
-        Box::new(self.db.remove_model::<M>(&conn, &self.search))
+    fn run(&mut self, info: RunnableInfo<D>) -> Box<dyn Any + Send + Sync> {
+        let db = info.get_database();
+        let conn = db.get_connection();
+        Box::new(db.remove_model::<M>(&conn, &self.search))
     }
 }

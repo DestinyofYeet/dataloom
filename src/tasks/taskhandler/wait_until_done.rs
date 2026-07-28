@@ -1,12 +1,18 @@
 use std::sync::mpsc::channel;
 
-use crate::tasks::{
-    taskhandler::{TaskEvent, TaskHandler, TaskHandlerError, TaskSubscriberEvent},
-    taskref::TaskRef,
+use crate::{
+    server::database_strategy::DatabaseStrategy,
+    tasks::{
+        taskhandler::{TaskEvent, TaskHandler, TaskHandlerError, TaskSubscriberEvent},
+        taskref::TaskRef,
+    },
 };
 
-impl TaskHandler {
-    pub fn wait_until_done<T>(&self, task: &TaskRef<T>) -> Result<(), TaskHandlerError> {
+impl<D> TaskHandler<D>
+where
+    D: DatabaseStrategy,
+{
+    pub fn wait_until_done<T>(&self, task: &TaskRef<T, D>) -> Result<(), TaskHandlerError> {
         let (tx, rx) = channel();
 
         self.to_handler.send(TaskEvent::RegisterSubscriber {

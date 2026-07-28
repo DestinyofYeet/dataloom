@@ -10,28 +10,44 @@ use std::{
 use tracing::trace;
 use uuid::Uuid;
 
-use crate::tasks::{
-    task::{Task, TaskState},
-    taskhandler::TaskEvent,
-    worker::WorkerError,
+use crate::{
+    server::database_strategy::DatabaseStrategy,
+    tasks::{
+        task::{Task, TaskState},
+        taskhandler::TaskEvent,
+        worker::WorkerError,
+    },
 };
 
-pub enum WorkerCommand {
-    ProcessTask(Arc<Mutex<Task>>),
+pub enum WorkerCommand<D>
+where
+    D: DatabaseStrategy,
+{
+    ProcessTask(Arc<Mutex<Task<D>>>),
     Init,
     Close,
 }
 
-pub struct Worker {
+pub struct Worker<D>
+where
+    D: DatabaseStrategy,
+{
     id: u64,
     handle: RefCell<Option<JoinHandle<()>>>,
-    to_thread: Sender<WorkerCommand>,
+    to_thread: Sender<WorkerCommand<D>>,
     current_task: Arc<Mutex<Option<Uuid>>>,
 }
 
-impl Worker {
-    pub fn new(id: u64, to_handler: Sender<TaskEvent>) -> Result<Self, WorkerError> {
-        let (tx, rx): (Sender<WorkerCommand>, Receiver<WorkerCommand>) = mpsc::channel();
+impl<D> Worker<D>
+where
+    D: DatabaseStrategy + 'static,
+{
+    pub fn new(
+        id: u64,
+        to_handler: Sender<TaskEvent<D>>,
+        database_handle: Arc<D>,
+    ) -> Result<Self, WorkerError> {
+        let (tx, rx): (Sender<WorkerCommand<D>>, Receiver<WorkerCommand<D>>) = mpsc::channel();
 
         tx.send(WorkerCommand::Init)
             .map_err(|e| WorkerError::Channel(e.to_string()))?;
@@ -57,7 +73,7 @@ impl Worker {
                                 *current_task.lock().expect("to get lock") = Some(task.get_id());
                             }
                             task.set_state(TaskState::Running);
-                            let result = task.run(id, to_handler.clone());
+                            let result = task.run(id, to_handler.clone(), database_handle.clone());
                             task.set_result(result);
                             task.set_state(TaskState::Done);
                             match to_handler.send(TaskEvent::TaskDone(task.get_id())) {
@@ -88,13 +104,13 @@ impl Worker {
         })
     }
 
-    fn send_msg(&self, command: WorkerCommand) -> Result<(), WorkerError> {
+    fn send_msg(&self, command: WorkerCommand<D>) -> Result<(), WorkerError> {
         self.to_thread
             .send(command)
             .map_err(|e| WorkerError::Channel(e.to_string()))
     }
 
-    pub fn schedule_task(&self, task: Arc<Mutex<Task>>) -> Result<(), WorkerError> {
+    pub fn schedule_task(&self, task: Arc<Mutex<Task<D>>>) -> Result<(), WorkerError> {
         self.send_msg(WorkerCommand::ProcessTask(task.clone()))
     }
 

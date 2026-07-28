@@ -14,22 +14,19 @@ use crate::{
     },
 };
 
-pub struct SaveModelTask<D, M>
+pub struct SaveModelTask<M>
 where
-    D: DatabaseStrategy,
     M: Model,
 {
-    db: Arc<D>,
     model: M,
 }
 
-impl<D, M> SaveModelTask<D, M>
+impl<M> SaveModelTask<M>
 where
-    D: DatabaseStrategy,
     M: Model,
 {
-    pub fn new(db: Arc<D>, model: M) -> Self {
-        Self { db, model }
+    pub fn new(model: M) -> Self {
+        Self { model }
     }
 
     pub fn get_model(&self) -> &M {
@@ -37,15 +34,16 @@ where
     }
 }
 
-impl<D, M> TaskRunnable for SaveModelTask<D, M>
+impl<D, M> TaskRunnable<D> for SaveModelTask<M>
 where
     D: DatabaseStrategy,
     M: Model + SaveData + FromIter + ValidateSaveData + Send + Sync,
 {
-    fn run(&mut self, info: RunnableInfo) -> Box<dyn Any + Send + Sync> {
+    fn run(&mut self, info: RunnableInfo<D>) -> Box<dyn Any + Send + Sync> {
         let logger = info.get_logger();
-        let conn = self.db.get_connection();
-        match self.db.save_model(&conn, &mut self.model) {
+        let db = info.get_database();
+        let conn = db.get_connection();
+        match db.save_model(&conn, &mut self.model) {
             Ok(_) => {}
             Err(e) => logger.error(&format!("Failed to save model: {e}")),
         };
@@ -53,9 +51,8 @@ where
     }
 }
 
-impl<D, M> TaskResultable for SaveModelTask<D, M>
+impl<M> TaskResultable for SaveModelTask<M>
 where
-    D: DatabaseStrategy,
     M: Model + SaveData + FromIter + ValidateSaveData,
 {
     type Result = Option<i64>;

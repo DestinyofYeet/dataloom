@@ -46,8 +46,11 @@ impl PrintTask {
     }
 }
 
-impl TaskRunnable for PrintTask {
-    fn run(&mut self, info: RunnableInfo) -> Box<dyn Any + Sync + Send> {
+impl<D> TaskRunnable<D> for PrintTask
+where
+    D: DatabaseStrategy,
+{
+    fn run(&mut self, info: RunnableInfo<D>) -> Box<dyn Any + Sync + Send> {
         let logger = info.get_logger();
         thread::sleep(Duration::from_millis(300));
         logger.info("print");
@@ -66,8 +69,11 @@ pub struct LongTask {
     pub stop: Arc<Mutex<bool>>,
 }
 
-impl TaskRunnable for LongTask {
-    fn run(&mut self, info: RunnableInfo) -> Box<dyn Any + Send + Sync> {
+impl<D> TaskRunnable<D> for LongTask
+where
+    D: DatabaseStrategy,
+{
+    fn run(&mut self, info: RunnableInfo<D>) -> Box<dyn Any + Send + Sync> {
         let logger = info.get_logger();
         loop {
             logger.info("long task");
@@ -97,8 +103,11 @@ impl TaskResultable for LongTask {
 
 pub struct ShortTask {}
 
-impl TaskRunnable for ShortTask {
-    fn run(&mut self, info: RunnableInfo) -> Box<dyn Any + Send + Sync> {
+impl<D> TaskRunnable<D> for ShortTask
+where
+    D: DatabaseStrategy,
+{
+    fn run(&mut self, info: RunnableInfo<D>) -> Box<dyn Any + Send + Sync> {
         info.get_logger().info("short task");
 
         Box::new(())
@@ -284,7 +293,7 @@ fn main() -> Result<(), anyhow::Error> {
 
     user.group_id = 5;
 
-    let save_task = SaveModelTask::new(db.clone(), user);
+    let save_task = SaveModelTask::new(user);
 
     let task_handler = server.get_task_handler();
     task_handler.spawn_task::<PrintTask>(PrintTask::new())?;
@@ -311,7 +320,7 @@ fn main() -> Result<(), anyhow::Error> {
 
 fn test<D>(server: &DjangoServer<D>)
 where
-    D: DatabaseStrategy,
+    D: DatabaseStrategy + 'static,
 {
     let db = server.get_database();
     db.with_transaction(|tx| {

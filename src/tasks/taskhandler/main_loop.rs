@@ -1,28 +1,44 @@
 use std::{
     collections::HashMap,
-    sync::mpsc::{Receiver, Sender},
+    sync::{
+        Arc,
+        mpsc::{Receiver, Sender},
+    },
 };
 
 use tracing::{debug, error, info, warn};
 use uuid::Uuid;
 
-use crate::tasks::{
-    taskhandler::{TaskEvent, TaskHandler, TaskSubscriberEvent},
-    worker::Worker,
+use crate::{
+    server::database_strategy::DatabaseStrategy,
+    tasks::{
+        taskhandler::{TaskEvent, TaskHandler, TaskSubscriberEvent},
+        worker::Worker,
+    },
 };
 
-pub(super) struct MainLoopData {
-    pub(super) recv: Receiver<TaskEvent>,
-    pub(super) sender: Sender<TaskEvent>,
+pub(super) struct MainLoopData<D>
+where
+    D: DatabaseStrategy,
+{
+    pub(super) recv: Receiver<TaskEvent<D>>,
+    pub(super) sender: Sender<TaskEvent<D>>,
     pub(super) max_workers: u64,
+    pub(super) database: Arc<D>,
 }
 
-impl TaskHandler {
-    pub(super) fn main_loop(data: MainLoopData) {
-        let mut workers: Vec<Worker> = Vec::with_capacity(data.max_workers as usize);
+impl<D> TaskHandler<D>
+where
+    D: DatabaseStrategy + 'static,
+{
+    pub(super) fn main_loop(data: MainLoopData<D>) {
+        let mut workers: Vec<Worker<D>> = Vec::with_capacity(data.max_workers as usize);
 
         for i in 0..data.max_workers {
-            workers.push(Worker::new(i, data.sender.clone()).expect("to) create workers"));
+            workers.push(
+                Worker::new(i, data.sender.clone(), data.database.clone())
+                    .expect("to) create workers"),
+            );
         }
 
         let mut subscribers = HashMap::<Uuid, Sender<TaskSubscriberEvent>>::new();
@@ -73,7 +89,7 @@ impl TaskHandler {
                         workers.retain(|e| e.is_running());
 
                         for id in respawn_worker_ids {
-                            match Worker::new(id, data.sender.clone()) {
+                            match Worker::new(id, data.sender.clone(), data.database.clone()) {
                                 Ok(value) => {
                                     warn!("Respawned worker {id}");
                                     workers.push(value);
@@ -121,6 +137,7 @@ impl TaskHandler {
                     let worker = match Worker::new(
                         long_worker_count + data.max_workers,
                         data.sender.clone(),
+                        data.database.clone(),
                     ) {
                         Ok(value) => value,
                         Err(e) => {

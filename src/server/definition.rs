@@ -9,23 +9,24 @@ pub struct DjangoServer<D>
 where
     D: DatabaseStrategy,
 {
-    task_handler: TaskHandler,
+    task_handler: TaskHandler<D>,
     database_strategy: Arc<D>,
     has_shutdown: bool,
 }
 
 impl<D> DjangoServer<D>
 where
-    D: DatabaseStrategy,
+    D: DatabaseStrategy + 'static,
 {
     pub fn new(
         workers: u64,
         logging_strategy: impl LogStrategy + Send + Sync + 'static,
         database_strategy: D,
     ) -> Result<Self, ServerError> {
+        let db = Arc::new(database_strategy);
         Ok(Self {
-            task_handler: TaskHandler::new(workers, Arc::new(logging_strategy)),
-            database_strategy: Arc::new(database_strategy),
+            task_handler: TaskHandler::new(workers, Arc::new(logging_strategy), db.clone()),
+            database_strategy: db.clone(),
             has_shutdown: false,
         })
     }
@@ -34,7 +35,7 @@ where
         self.database_strategy.clone()
     }
 
-    pub fn get_task_handler(&self) -> &TaskHandler {
+    pub fn get_task_handler(&self) -> &TaskHandler<D> {
         &self.task_handler
     }
 

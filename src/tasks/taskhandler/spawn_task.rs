@@ -1,18 +1,24 @@
 use std::sync::{Arc, Mutex};
 
-use crate::tasks::{
-    task::{Runnable, Task},
-    taskhandler::{TaskEvent, TaskHandler, TaskHandlerError},
-    taskref::TaskRef,
-    taskrunnable::{TaskResultable, TaskRunnable},
+use crate::{
+    server::database_strategy::DatabaseStrategy,
+    tasks::{
+        task::{Runnable, Task},
+        taskhandler::{TaskEvent, TaskHandler, TaskHandlerError},
+        taskref::TaskRef,
+        taskrunnable::{TaskResultable, TaskRunnable},
+    },
 };
 
-impl TaskHandler {
-    pub fn spawn_task<T>(&self, runnable: T) -> Result<TaskRef<T>, TaskHandlerError>
+impl<D> TaskHandler<D>
+where
+    D: DatabaseStrategy,
+{
+    pub fn spawn_task<T>(&self, runnable: T) -> Result<TaskRef<T, D>, TaskHandlerError>
     where
-        T: TaskResultable + TaskRunnable + Send + Sync + 'static,
+        T: TaskResultable + TaskRunnable<D> + Send + Sync + 'static,
     {
-        let runnable: Runnable = Box::new(runnable);
+        let runnable: Runnable<D> = Box::new(runnable);
         let task = Arc::new(Mutex::new(Task::new(runnable, self.log_strategy.clone())));
 
         let task_ref = TaskRef::new(task.clone());

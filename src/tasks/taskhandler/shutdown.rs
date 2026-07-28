@@ -1,6 +1,12 @@
-use crate::tasks::taskhandler::{TaskEvent, TaskHandler, TaskHandlerError};
+use crate::{
+    server::database_strategy::DatabaseStrategy,
+    tasks::taskhandler::{TaskEvent, TaskHandler, TaskHandlerError},
+};
 
-impl TaskHandler {
+impl<D> TaskHandler<D>
+where
+    D: DatabaseStrategy,
+{
     pub(crate) fn shutdown(&mut self) -> Result<(), TaskHandlerError> {
         if let Some(handle) = self.handle.take() {
             self.to_handler.send(TaskEvent::Shutdown)?;
