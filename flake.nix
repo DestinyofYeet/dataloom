@@ -12,7 +12,7 @@
 
       deps = import ./nix/dependencies.nix { inherit pkgs; };
 
-      toml = builtins.fromTOML builtins.readFile ./Cargo.toml;
+      toml = builtins.fromTOML (builtins.readFile ./Cargo.toml);
     in
     {
       devShells.x86_64-linux.default = pkgs.mkShell {

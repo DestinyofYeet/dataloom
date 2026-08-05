@@ -17,7 +17,7 @@ rustPlatform.buildRustPackage {
 
   src = ../.;
 
-  cargoHash = "sha256-aysldp24E+NcC0XWwWp7UwL0swvc4wQ/mvUHPAlKf6s=";
+  cargoHash = "sha256-5U+BXfJQ29sdjtr0XViMlEIRIXH8pTndV4aZnUSEGJE=";
 
   meta = with lib; {
     description = "A databaes abstraction layer";
