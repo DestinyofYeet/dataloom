@@ -5,7 +5,7 @@ use crate::{
     tasks::{logstrategy::LogStrategy, taskhandler::TaskHandler},
 };
 
-pub struct DjangoServer<D>
+pub struct DataloomServer<D>
 where
     D: DatabaseStrategy,
 {
@@ -14,7 +14,7 @@ where
     has_shutdown: bool,
 }
 
-impl<D> DjangoServer<D>
+impl<D> DataloomServer<D>
 where
     D: DatabaseStrategy + 'static,
 {

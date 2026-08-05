@@ -1,7 +1,7 @@
 use chrono::{DateTime, Local, Utc};
 use clap::Parser;
-use django_rs::{
-    django_rs_macro::{FromIter, SaveData},
+use dataloom::{
+    dataloom_macro::{FromIter, SaveData},
     models::{
         MigrationKind, ModelMigration,
         column::{ColumnType, ColumnValue, CreateColumn, CreateOptions},
@@ -9,7 +9,7 @@ use django_rs::{
         traits::model::Model,
     },
     server::{
-        DjangoServer,
+        DataloomServer,
         database_strategy::{
             DatabaseStrategy, TransactionOptions, default_strategies::SqliteStrategy,
         },
@@ -62,7 +62,7 @@ where
 impl TaskResultable for PrintTask {
     type Result = ();
 
-    fn downcast(_result: django_rs::tasks::task::TaskResult) -> Self::Result {}
+    fn downcast(_result: dataloom::tasks::task::TaskResult) -> Self::Result {}
 }
 
 pub struct LongTask {
@@ -98,7 +98,7 @@ where
 impl TaskResultable for LongTask {
     type Result = ();
 
-    fn downcast(_result: django_rs::tasks::task::TaskResult) -> Self::Result {}
+    fn downcast(_result: dataloom::tasks::task::TaskResult) -> Self::Result {}
 }
 
 pub struct ShortTask {}
@@ -117,7 +117,7 @@ where
 impl TaskResultable for ShortTask {
     type Result = ();
 
-    fn downcast(_: django_rs::tasks::task::TaskResult) -> Self::Result {}
+    fn downcast(_: dataloom::tasks::task::TaskResult) -> Self::Result {}
 }
 
 #[derive(Debug, FromIter, SaveData, Serialize)]
@@ -244,7 +244,7 @@ fn main() -> Result<(), anyhow::Error> {
         .init();
 
     let mut server =
-        DjangoServer::new(8, TracingStrategy {}, SqliteStrategy::new("tmp/db.sqlite"))?;
+        DataloomServer::new(8, TracingStrategy {}, SqliteStrategy::new("tmp/db.sqlite"))?;
 
     let mut group = Group {
         id: None,
@@ -318,7 +318,7 @@ fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn test<D>(server: &DjangoServer<D>)
+fn test<D>(server: &DataloomServer<D>)
 where
     D: DatabaseStrategy + 'static,
 {

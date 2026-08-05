@@ -4,7 +4,7 @@ pub mod tasks;
 
 pub use chrono;
 
-pub use django_rs_macro;
+pub use dataloom_macro;
 
 #[cfg(test)]
 mod tests;

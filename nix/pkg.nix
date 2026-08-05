@@ -2,6 +2,7 @@
   rustPlatform,
   lib,
   pkgs,
+  toml,
   ...
 }:
 let
@@ -9,8 +10,8 @@ let
 in
 
 rustPlatform.buildRustPackage {
-  pname = "django-rs";
-  version = "1.0";
+  pname = toml.package.name;
+  version = toml.package.version;
 
   buildInputs = deps.packages;
 
@@ -19,7 +20,7 @@ rustPlatform.buildRustPackage {
   cargoHash = "sha256-aysldp24E+NcC0XWwWp7UwL0swvc4wQ/mvUHPAlKf6s=";
 
   meta = with lib; {
-    description = "A program";
+    description = "A databaes abstraction layer";
     license = licenses.agpl3Only;
     platforms = platforms.all;
   };

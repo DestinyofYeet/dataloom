@@ -1,4 +1,4 @@
-# Django-rs
+# Dataloom
 
 I wanted to build something like the python framework Django
 
@@ -91,7 +91,7 @@ In the future I want to implement a `PostgresStrategy` and some other LoggingStr
 
 ```rust
 pub fn main() {
-  let server = DjangoServer::new(8, TracingStrategy {}, SqliteStrategy::new("somePath.db"))?;
+  let server = DataloomServer::new(8, TracingStrategy {}, SqliteStrategy::new("somePath.db"))?;
   let db = server.get_database()
 
   db.migrate_model::<MyStruct>().unwrap();

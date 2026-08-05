@@ -1,5 +1,5 @@
 use crate::{
-    self as django_rs,
+    self as dataloom,
     models::{
         MigrationKind, ModelMigration,
         column::{ColumnType, CreateColumn, CreateOptions},
@@ -17,10 +17,8 @@ use crate::{
 use std::sync::LazyLock;
 
 use chrono::{DateTime, Utc};
-use django_rs_macro::{FromIter, SaveData};
+use dataloom_macro::{FromIter, SaveData};
 use serde::{Deserialize, Serialize};
-
-use crate::server::database_strategy::default_strategies::SqliteStrategy;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Data {

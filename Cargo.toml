@@ -1,11 +1,11 @@
 [package]
-name = "django-rs"
+name = "dataloom"
 version = "0.1.0"
 edition = "2024"
 
 [workspace]
 resolver = "3"
-members = ["django-rs-macro", "examples/serde", "examples/test-client"]
+members = ["dataloom-macro", "examples/serde", "examples/test-client"]
 
 [dependencies]
 anyhow = "1.0.102"
@@ -16,7 +16,7 @@ rusqlite = "0.39.0"
 thiserror = "2.0.18"
 tracing = "0.1.44"
 uuid = { version = "1.0", features = ["v4"] }
-django-rs-macro = { path = "./django-rs-macro" }
+dataloom-macro = { path = "./dataloom-macro" }
 r2d2_sqlite = "0.34.0"
 r2d2 = "0.8.10"
 serde = { version = "1.0.228", features = ["derive"] }

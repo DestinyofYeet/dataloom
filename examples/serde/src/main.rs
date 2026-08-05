@@ -1,16 +1,16 @@
 use std::sync::LazyLock;
 
-use django_rs::django_rs_macro::{FromIter, SaveData};
-use django_rs::models::search::SearchQuery;
-use django_rs::models::traits::save_data::SaveData;
-use django_rs::models::{MigrationKind, ModelMigration};
-use django_rs::{
+use dataloom::dataloom_macro::{FromIter, SaveData};
+use dataloom::models::search::SearchQuery;
+use dataloom::models::traits::save_data::SaveData;
+use dataloom::models::{MigrationKind, ModelMigration};
+use dataloom::{
     models::{
         column::{ColumnType, CreateColumn, CreateOptions},
         traits::model::Model,
     },
     server::{
-        DjangoServer,
+        DataloomServer,
         database_strategy::{DatabaseStrategy, default_strategies::SqliteStrategy},
     },
     tasks::logstrategy::default_strategies::tracing_strategy::TracingStrategy,
@@ -144,7 +144,7 @@ impl Model for Test {
 
 fn main() {
     let mut server =
-        DjangoServer::new(8, TracingStrategy {}, SqliteStrategy::new("./test.db")).unwrap();
+        DataloomServer::new(8, TracingStrategy {}, SqliteStrategy::new("./test.db")).unwrap();
 
     let db = server.get_database();
     db.migrate_model::<Test>().unwrap();

@@ -197,12 +197,12 @@ dependencies = [
 ]
 
 [[package]]
-name = "django-rs"
+name = "dataloom"
 version = "0.1.0"
 dependencies = [
  "anyhow",
  "chrono",
- "django-rs-macro",
+ "dataloom-macro",
  "itertools",
  "r2d2",
  "r2d2_sqlite",
@@ -218,7 +218,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "django-rs-macro"
+name = "dataloom-macro"
 version = "0.1.0"
 dependencies = [
  "quote",
@@ -753,7 +753,7 @@ dependencies = [
 name = "serde-test"
 version = "0.1.0"
 dependencies = [
- "django-rs",
+ "dataloom",
  "serde",
  "serde_json",
 ]
@@ -867,7 +867,7 @@ dependencies = [
  "anyhow",
  "chrono",
  "clap",
- "django-rs",
+ "dataloom",
  "serde",
  "tracing-subscriber",
 ]

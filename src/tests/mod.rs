@@ -2,7 +2,7 @@ use std::path::PathBuf;
 
 use crate::{
     server::{
-        DjangoServer,
+        DataloomServer,
         database_strategy::{DatabaseStrategy, default_strategies::SqliteStrategy},
     },
     tasks::logstrategy::default_strategies::tracing_strategy::TracingStrategy,
@@ -16,14 +16,14 @@ fn get_test_dir() -> PathBuf {
     tempfile.keep()
 }
 
-pub fn setup_server<D>(strategy: D) -> DjangoServer<D>
+pub fn setup_server<D>(strategy: D) -> DataloomServer<D>
 where
     D: DatabaseStrategy + 'static,
 {
-    DjangoServer::new(1, TracingStrategy {}, strategy).expect("to create server")
+    DataloomServer::new(1, TracingStrategy {}, strategy).expect("to create server")
 }
 
-pub fn setup_sqlite_server() -> DjangoServer<SqliteStrategy> {
+pub fn setup_sqlite_server() -> DataloomServer<SqliteStrategy> {
     let dir = get_test_dir();
     setup_server(SqliteStrategy::new(
         dir.join("database.db").to_str().unwrap(),

@@ -11,6 +11,8 @@
       pkgs = import nixpkgs { system = "x86_64-linux"; };
 
       deps = import ./nix/dependencies.nix { inherit pkgs; };
+
+      toml = builtins.fromTOML builtins.readFile ./Cargo.toml;
     in
     {
       devShells.x86_64-linux.default = pkgs.mkShell {
@@ -19,6 +21,6 @@
         # PKG_CONFIG_PATH = "${pkgs.openssl.dev}/lib/pkgconfig";
       };
 
-      packages.x86_64-linux.default = pkgs.callPackage ./nix/pkg.nix { };
+      packages.x86_64-linux.default = pkgs.callPackage ./nix/pkg.nix { inherit toml; };
     };
 }
