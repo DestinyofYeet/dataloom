@@ -10,7 +10,7 @@ env:
   CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN  }}
 
 jobs:
-  publish:
+  publish_macro:
     runs-on: native
     steps:
       - uses: https://code.forgejo.org/actions/checkout@v6
@@ -18,12 +18,17 @@ jobs:
           fetch-depth: 0
 
       - name: "Publish macro"
-        if: "always"
         working-directory: "./dataloom-macro"
         run: |
           nix run nixpkgs#cargo -- publish
 
+  publish:
+    runs-on: native
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v6
+        with:
+          fetch-depth: 0
+
       - name: "Publish code"
-        if: "always"
         run: |
           nix run nixpkgs#cargo -- publish
