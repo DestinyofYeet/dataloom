@@ -17,18 +17,12 @@ env:
 jobs:
   publish_macro:
     runs-on: ubuntu
-    defaults:
-      run:
-        working-directory: "./dataloom-macro"
 
     steps:
-      # - uses: https://code.forgejo.org/actions/checkout@v7
-      #   with:
-      #     fetch-depth: 0
       - name: "Get src"
         run: |
           git clone https://git.ole.blue/${{ github.repository_owner }}/${{ github.repository }} --revision ${{ github.sha }} --depth 0 source
-          cd source
+          cd source/dataloom-macro
 
       - name: "Check tag"
         run: |
@@ -42,9 +36,10 @@ jobs:
   publish:
     runs-on: ubuntu
     steps:
-      - uses: https://code.forgejo.org/actions/checkout@v7
-        with:
-          fetch-depth: 0
+      - name: "Get src"
+        run: |
+          git clone https://git.ole.blue/${{ github.repository_owner }}/${{ github.repository }} --revision ${{ github.sha }} --depth 0 source
+          cd source/dataloom-macro
 
       - name: "Check tag"
         run: |
