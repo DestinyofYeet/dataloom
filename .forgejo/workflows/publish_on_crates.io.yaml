@@ -18,10 +18,12 @@ jobs:
           fetch-depth: 0
 
       - name: "Publish macro"
+        if: "always"
         working-directory: "./dataloom-macro"
         run: |
           nix run nixpkgs#cargo -- publish
 
       - name: "Publish code"
+        if: "always"
         run: |
           nix run nixpkgs#cargo -- publish
