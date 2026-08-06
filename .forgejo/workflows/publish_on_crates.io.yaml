@@ -19,6 +19,10 @@ jobs:
     runs-on: ubuntu
 
     steps:
+      - name: "Install deps"
+        run: |
+          apt install -y git cargo
+
       - name: "Get src"
         run: |
           git clone https://git.ole.blue/${{ github.repository_owner }}/${{ github.repository }} --revision ${{ github.sha }} --depth 0 source
@@ -36,6 +40,10 @@ jobs:
   publish:
     runs-on: ubuntu
     steps:
+      - name: "Install deps"
+        run: |
+          apt install -y git cargo
+
       - name: "Get src"
         run: |
           git clone https://git.ole.blue/${{ github.repository_owner }}/${{ github.repository }} --revision ${{ github.sha }} --depth 0 source
