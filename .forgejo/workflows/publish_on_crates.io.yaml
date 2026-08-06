@@ -21,6 +21,7 @@ jobs:
     steps:
       - name: "Install deps"
         run: |
+          apt update
           apt install -y git cargo
 
       - name: "Get src"
@@ -42,6 +43,7 @@ jobs:
     steps:
       - name: "Install deps"
         run: |
+          apt update
           apt install -y git cargo
 
       - name: "Get src"
