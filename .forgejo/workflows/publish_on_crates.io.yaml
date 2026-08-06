@@ -16,7 +16,7 @@ env:
 
 jobs:
   publish_macro:
-    runs-on: ubuntu
+    runs-on: debian
 
     steps:
       - name: "Install deps"
@@ -39,7 +39,7 @@ jobs:
           cargo publish
 
   publish:
-    runs-on: ubuntu
+    runs-on: debian
     steps:
       - name: "Install deps"
         run: |
