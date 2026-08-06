@@ -1,5 +1,5 @@
 ---
-enable-email-notifications: true
+enable-email-notifications: false
 name: "Upload to crates.io"
 on:
   push:
@@ -12,15 +12,22 @@ env:
 jobs:
   publish_macro:
     runs-on: native
+    defaults:
+        working-directory: "./dataloom-macro"
+
     steps:
       - uses: https://code.forgejo.org/actions/checkout@v6
         with:
           fetch-depth: 0
 
-      - name: "Publish macro"
-        working-directory: "./dataloom-macro"
+      - name: "Check tag"
         run: |
-          nix run nixpkgs#cargo -- publish
+          test "v$(nix run nixpkgs#toml-cli get Cargo.toml package.version)" = "${{ forgejo.ref_name }}"
+
+      - name: "Publish macro"
+        shell: "nix develop --command bash {0}"
+        run: |
+          cargo publish
 
   publish:
     runs-on: native
@@ -29,7 +36,11 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: "Check tag"
+        run: |
+          test "v$(nix run nixpkgs#toml-cli get Cargo.toml package.version)" = "${{ forgejo.ref_name }}"
+
       - name: "Publish code"
-        shell: nix develop --command bash {0}
+        shell: "nix develop --command bash {0}"
         run: |
           cargo publish
