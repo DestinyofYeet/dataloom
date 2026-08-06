@@ -30,6 +30,6 @@ jobs:
           fetch-depth: 0
 
       - name: "Publish code"
-        shell: nix-shell -p gcc cargo --run
+        shell: nix-shell -p gcc cargo --run {0}
         run: |
           cargo publish
