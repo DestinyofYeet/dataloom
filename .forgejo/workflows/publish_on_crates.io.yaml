@@ -16,38 +16,36 @@ env:
 
 jobs:
   publish_macro:
-    runs-on: rust
+    runs-on: ubuntu
     defaults:
       run:
         working-directory: "./dataloom-macro"
 
     steps:
-      # included in docker
-      # - uses: https://code.forgejo.org/actions/checkout@v6
-      #   with:
-      #     fetch-depth: 0
+      - uses: https://code.forgejo.org/actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: "Check tag"
         run: |
           cargo install toml-cli
-          test "v$(toml get Cargo.toml package.version)" = "${{ forgejo.ref_name }}"
+          test "v$(toml get Cargo.toml package.version)" = "${{ github.ref_name }}"
 
       - name: "Publish macro"
         run: |
           cargo publish
 
   publish:
-    runs-on: rust
+    runs-on: ubuntu
     steps:
-      # included in docker
-      # - uses: https://code.forgejo.org/actions/checkout@v6
-      #   with:
-      #     fetch-depth: 0
+      - uses: https://code.forgejo.org/actions/checkout@v7
+        with:
+          fetch-depth: 0
 
       - name: "Check tag"
         run: |
           cargo install toml-cli
-          test "v$(toml get Cargo.toml package.version)" = "${{ forgejo.ref_name }}"
+          test "v$(toml get Cargo.toml package.version)" = "${{ github.ref_name }}"
 
       - name: "Publish code"
         run: |
