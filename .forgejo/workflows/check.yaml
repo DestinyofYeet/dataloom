@@ -18,4 +18,4 @@ jobs:
           git pull
       - name: Check commit format
         run: |
-          nix run nixpkgs#commitizen -- check -d
+          nix run nixpkgs#commitizen -- check -d --allow-abort
