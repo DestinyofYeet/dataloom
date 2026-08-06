@@ -220,6 +220,8 @@ dependencies = [
 [[package]]
 name = "dataloom-macro"
 version = "0.1.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "292660a577534b988e9b8c57c6b74b19c512150cb9803afaf12a8e183ef67df3"
 dependencies = [
  "quote",
  "syn",
