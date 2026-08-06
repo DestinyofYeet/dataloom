@@ -25,9 +25,8 @@ jobs:
           test "v$(nix run nixpkgs#toml-cli get Cargo.toml package.version)" = "${{ forgejo.ref_name }}"
 
       - name: "Publish macro"
-        shell: "nix develop --command bash {0}"
         run: |
-          cargo publish
+          nix run nixpkgs#cargo -- publish
 
   publish:
     runs-on: native
@@ -43,4 +42,4 @@ jobs:
       - name: "Publish code"
         shell: "nix develop --command bash {0}"
         run: |
-          cargo publish
+          nix run nixpkgs#cargo -- publish
