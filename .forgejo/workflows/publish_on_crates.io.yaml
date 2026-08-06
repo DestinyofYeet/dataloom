@@ -13,6 +13,7 @@ jobs:
   publish_macro:
     runs-on: native
     defaults:
+      run:
         working-directory: "./dataloom-macro"
 
     steps:
@@ -26,7 +27,7 @@ jobs:
 
       - name: "Publish macro"
         run: |
-          nix run nixpkgs#cargo -- publish
+          nix shell nixpkgs#cargo nixpkgs#gcc --command bash -c 'cargo publish'
 
   publish:
     runs-on: native
@@ -40,6 +41,5 @@ jobs:
           test "v$(nix run nixpkgs#toml-cli get Cargo.toml package.version)" = "${{ forgejo.ref_name }}"
 
       - name: "Publish code"
-        shell: "nix develop --command bash {0}"
         run: |
-          nix run nixpkgs#cargo -- publish
+          nix shell nixpkgs#cargo nixpkgs#gcc --command bash -c 'cargo publish'
