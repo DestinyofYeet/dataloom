@@ -22,9 +22,10 @@ jobs:
         working-directory: "./dataloom-macro"
 
     steps:
-      - uses: https://code.forgejo.org/actions/checkout@v6
-        with:
-          fetch-depth: 0
+      # included in docker
+      # - uses: https://code.forgejo.org/actions/checkout@v6
+      #   with:
+      #     fetch-depth: 0
 
       - name: "Check tag"
         run: |
@@ -38,9 +39,10 @@ jobs:
   publish:
     runs-on: rust
     steps:
-      - uses: https://code.forgejo.org/actions/checkout@v6
-        with:
-          fetch-depth: 0
+      # included in docker
+      # - uses: https://code.forgejo.org/actions/checkout@v6
+      #   with:
+      #     fetch-depth: 0
 
       - name: "Check tag"
         run: |
