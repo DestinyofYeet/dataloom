@@ -1,7 +1,7 @@
 ---
 enable-email-notifications: true
 name: "Check"
-on: # yamllint disable-line rule:truthy
+on:
   pull_request:
     types: [opened, synchronize, ready_for_review]
 
@@ -19,3 +19,25 @@ jobs:
       - name: Check commit format
         run: |
           nix run nixpkgs#commitizen -- check -d --allow-abort
+
+  check_cargo_lock:
+    runs-on: native
+    if: '! github.event.pull_request.draft'
+    steps:
+      - name: "Fetch source"
+        uses: https://code.forgejo.org/actions/checkout@v6
+        with:
+          fetch-depth: 0
+      - name: "Check lockfile"
+        run: |
+          nix run nixpkgs#cargo -- update
+          git diff --exit-code > lock_patch.diff
+
+      - name: Upload lock patch diff
+        if: failure()
+        uses: https://code.forgejo.org/forgejo/upload-artifact@v4
+        with:
+          name: lock-patch
+          path: lock_patch.diff
+          show-progress: true
+          overwrite: true
