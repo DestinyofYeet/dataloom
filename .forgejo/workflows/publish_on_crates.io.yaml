@@ -9,6 +9,11 @@ on:
 env:
   CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN  }}
 
+defaults:
+  run:
+    shell:
+      nix develop --command bash {0}
+
 jobs:
   publish_macro:
     runs-on: native
@@ -27,7 +32,7 @@ jobs:
 
       - name: "Publish macro"
         run: |
-          nix shell nixpkgs#cargo nixpkgs#gcc --command bash -c 'cargo publish'
+          cargo publish
 
   publish:
     runs-on: native
@@ -40,6 +45,10 @@ jobs:
         run: |
           test "v$(nix run nixpkgs#toml-cli get Cargo.toml package.version)" = "${{ forgejo.ref_name }}"
 
+      - name: "Make stuff executable"
+        run: |
+          chmod -R +x *
+
       - name: "Publish code"
         run: |
-          nix shell nixpkgs#cargo nixpkgs#gcc --command bash -c 'cargo publish'
+          cargo publish
