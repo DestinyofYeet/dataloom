@@ -16,7 +16,7 @@ defaults:
 
 jobs:
   publish_macro:
-    runs-on: native
+    runs-on: rust
     defaults:
       run:
         working-directory: "./dataloom-macro"
@@ -35,7 +35,7 @@ jobs:
           cargo publish
 
   publish:
-    runs-on: native
+    runs-on: rust
     steps:
       - uses: https://code.forgejo.org/actions/checkout@v6
         with:
@@ -44,10 +44,6 @@ jobs:
       - name: "Check tag"
         run: |
           test "v$(nix run nixpkgs#toml-cli get Cargo.toml package.version)" = "${{ forgejo.ref_name }}"
-
-      - name: "Make stuff executable"
-        run: |
-          chmod -R +x *
 
       - name: "Publish code"
         run: |
