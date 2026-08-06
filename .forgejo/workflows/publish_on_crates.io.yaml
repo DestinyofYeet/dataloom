@@ -16,7 +16,7 @@ defaults:
 
 jobs:
   publish_macro:
-    runs-on: rust
+    runs-on: native
     defaults:
       run:
         working-directory: "./dataloom-macro"
@@ -35,7 +35,7 @@ jobs:
           cargo publish
 
   publish:
-    runs-on: rust
+    runs-on: native
     steps:
       - uses: https://code.forgejo.org/actions/checkout@v6
         with:
