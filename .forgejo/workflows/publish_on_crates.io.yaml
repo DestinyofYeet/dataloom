@@ -1,0 +1,27 @@
+---
+enable-email-notifications: true
+name: "Upload to crates.io"
+on:
+  push:
+    tags:
+      - "v[0-9]+.[0-9]+.[0-9]+"
+
+env:
+  CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN  }}
+
+jobs:
+  publish:
+    runs-on: native
+    steps:
+      - uses: https://code.forgejo.org/actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: "Publish macro"
+        working-directory: "./dataloom-macro"
+        run: |
+          nix run nixpkgs#cargo -- publish
+
+      - name: "Publish code"
+        run: |
+          nix run nixpkgs#cargo -- publish

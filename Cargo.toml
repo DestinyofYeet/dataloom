@@ -11,7 +11,7 @@ categories = ["database"]
 
 [workspace]
 resolver = "3"
-members = ["examples/serde", "examples/test-client"]
+members = ["dataloom-macro", "examples/serde", "examples/test-client"]
 
 [dependencies]
 anyhow = "1.0.102"
