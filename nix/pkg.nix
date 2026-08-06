@@ -20,7 +20,7 @@ rustPlatform.buildRustPackage {
   cargoHash = "sha256-5U+BXfJQ29sdjtr0XViMlEIRIXH8pTndV4aZnUSEGJE=";
 
   meta = with lib; {
-    description = "A databaes abstraction layer";
+    description = toml.package.description;
     license = licenses.agpl3Only;
     platforms = platforms.all;
   };

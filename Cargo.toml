@@ -2,6 +2,12 @@
 name = "dataloom"
 version = "0.1.0"
 edition = "2024"
+description = "A database abstraction layer"
+license-file = "LICENSE"
+repository = "https://git.ole.blue/DestinyofYeet/dataloom"
+readme = "README.md"
+keywords = ["database", "abstraction", "task-scheduling", "tasks"]
+categories = ["database"]
 
 [workspace]
 resolver = "3"
