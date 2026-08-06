@@ -31,4 +31,6 @@ jobs:
 
       - name: "Publish code"
         run: |
-          nix run nixpkgs#cargo -- publish
+          #! /usr/bin/env nix-shell
+          #! nix-shell -i bash -p gcc cargo
+          cargo publish
