@@ -27,6 +27,7 @@ jobs:
         working-directory: "dataloom-macro"
         run: |
           cargo install toml-cli
+          export PATH=$PATH:/root/.cargo/bin
           test "v$(toml get Cargo.toml package.version)" = "${{ github.ref_name }}"
 
       - name: "Publish macro"
@@ -49,6 +50,7 @@ jobs:
       - name: "Check tag"
         run: |
           cargo install toml-cli
+          export PATH=$PATH:/root/.cargo/bin
           test "v$(toml get Cargo.toml package.version)" = "${{ github.ref_name }}"
 
       - name: "Publish code"
