@@ -13,15 +13,15 @@ jobs:
   publish_macro:
     runs-on: debian
     steps:      
-      - uses: /.forgejo/actions/docker_deps_setup
-      - uses: /.forgejo/actions/publish
+      - uses: ./.forgejo/actions/docker_deps_setup
+      - uses: ./.forgejo/actions/publish
         with:
           working-directory: "dataloom-macro"
 
   publish:
     runs-on: debian
     steps:      
-      - uses: /.forgejo/actions/docker_deps_setup
-      - uses: /.forgejo/actions/publish
+      - uses: ./.forgejo/actions/docker_deps_setup
+      - uses: ./.forgejo/actions/publish
         with:
           working-directory: "dataloom"
