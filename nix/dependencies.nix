@@ -10,5 +10,6 @@
     rustfmt # formatter
     sqlite.dev
     cargo-expand
+    toml-cli
   ];
 }

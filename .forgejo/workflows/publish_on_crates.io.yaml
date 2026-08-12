@@ -28,7 +28,7 @@ jobs:
         run: |
           export PATH=$PATH:/root/.cargo/bin
           cargo install toml-cli
-          test "v$(toml get Cargo.toml package.version)" = "${{ github.ref_name }}"
+          [[ "v$(toml get Cargo.toml package.version -r)" = "${{ github.ref_name  }}" ]] || (echo "Failed to validate macro version. Does not match tag." && false)
 
       - name: "Publish macro"
         working-directory: "dataloom-macro"
@@ -51,7 +51,8 @@ jobs:
         run: |
           export PATH=$PATH:/root/.cargo/bin
           cargo install toml-cli
-          test "v$(toml get Cargo.toml package.version)" = "${{ github.ref_name }}"
+          test "v$(toml get Cargo.toml package.version -r)" = "${{ github.ref_name }}"
+          [[ "v$(toml get Cargo.toml package.version -r)" = "${{ github.ref_name  }}" ]] || (echo "Failed to validate version. Does not match tag." && false)
 
       - name: "Publish code"
         run: |
