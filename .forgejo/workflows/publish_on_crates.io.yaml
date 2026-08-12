@@ -12,44 +12,16 @@ env:
 jobs:
   publish_macro:
     runs-on: debian
-
-    steps:
-      - name: "Install deps"
-        run: |
-          apt update
-          apt install -y git nodejs curl
-          curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | sh -s -- --daemon
-
-      - uses: https://code.forgejo.org/actions/checkout@v7
+    steps:      
+      - uses: /.forgejo/actions/docker_deps_setup
+      - uses: /.forgejo/actions/publish
         with:
-          fetch-depth: 0
-      
-      - name: "Check tag"
-        working-directory: "dataloom-macro"
-        run: |
-          [[ "v$(nix run nixpkgs#toml-cli --  get Cargo.toml package.version -r)" = "${{ github.ref_name  }}" ]] || (echo "Failed to validate macro version. Does not match tag." && false)
-
-      - name: "Publish macro"
-        working-directory: "dataloom-macro"
-        run: |
-          nix run nixpkgs#cargo -- publish
+          working-directory: "dataloom-macro"
 
   publish:
     runs-on: debian
-    steps:
-      - name: "Install deps"
-        run: |
-          apt update
-          apt install -y git cargo nodejs
-
-      - uses: https://code.forgejo.org/actions/checkout@v7
+    steps:      
+      - uses: /.forgejo/actions/docker_deps_setup
+      - uses: /.forgejo/actions/publish
         with:
-          fetch-depth: 0
-
-      - name: "Check tag"
-        run: |
-          [[ "v$(nix run nixpkgs#toml-clie -- get Cargo.toml package.version -r)" = "${{ github.ref_name  }}" ]] || (echo "Failed to validate version. Does not match tag." && false)
-
-      - name: "Publish code"
-        run: |
-          nix run nixpkgs#cargo -- publish
+          working-directory: "dataloom"

@@ -1,0 +1,18 @@
+name: "Publish on crates.io"
+inputs:
+  working-directory:
+    description: "The working directory to work in"
+
+runs:
+  using: "composite"
+  steps:
+    - name: "Check tag"
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        [[ "v$(nix run nixpkgs#toml-cli --  get Cargo.toml package.version -r)" = "${{ github.ref_name  }}" ]] || (echo "Failed to validate package version. Does not match tag." && false)
+
+    - name: "Publish macro"
+      working-directory: ${{ inputs.working-directory }}
+      run: |
+        nix run nixpkgs#cargo -- publish
+  
