@@ -1,6 +1,6 @@
 [package]
 name = "dataloom-macro"
-version = "0.1.0"
+version = "0.1.47"
 edition = "2024"
 repository = "https://git.ole.blue/DestinyofYeet/dataloom"
 description = "Procmacro for dataloom"
