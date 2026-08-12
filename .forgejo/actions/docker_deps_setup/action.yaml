@@ -5,6 +5,6 @@ runs:
   steps:
     - name: "Install deps"
       run: |
-        apt install sudo curl udev coreutils
+        apt install -y sudo curl udev coreutils
     - name: "Install nix"
       uses: https://github.com/cachix/install-nix-action@v31
