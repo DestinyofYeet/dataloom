@@ -3,8 +3,5 @@ name: Setup dependencies
 runs:
   using: "composite"
   steps:
-    - name: "Install deps"
-      run: |        
-          apt install -y curl xz-utils tar
-          curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | sh -s -- --daemon
-
+    - name: "Install nix"
+      uses: https://github.com/cachix/install-nix-action@v31
