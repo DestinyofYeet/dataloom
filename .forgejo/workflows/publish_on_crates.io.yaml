@@ -11,34 +11,34 @@ env:
 
 jobs:
   publish_macro:
-    runs-on: debian
+    runs-on: nixos-docker
     steps:      
       - name: "Install minimal deps"
         run: |
-          apt update
-          apt install -y git nodejs
+          nix-env -iA nixos.git
+          nix-env -iA nixos.nodejs
 
       - name: "Checkout repository"
         uses: https://code.forgejo.org/actions/checkout@v7
         with:
           fetch-depth: 0
 
-      - uses: ./.forgejo/actions/docker_deps_setup
+      # - uses: ./.forgejo/actions/docker_deps_setup
       - uses: ./.forgejo/actions/publish
         with:
           working-directory: "dataloom-macro"
 
   publish:
-    runs-on: debian
+    runs-on: nixos-docker
     steps:      
       - name: "Install minimal deps"
         run: |
-          apt update
-          apt install -y git nodejs
+          nix-env -iA nixos.git
+          nix-env -iA nixos.nodejs
 
       - name: "Checkout repository"
         uses: https://code.forgejo.org/actions/checkout@v7
         with:
           fetch-depth: 0
-      - uses: ./.forgejo/actions/docker_deps_setup
+      # - uses: ./.forgejo/actions/docker_deps_setup
       - uses: ./.forgejo/actions/publish

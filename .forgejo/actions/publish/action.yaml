@@ -9,10 +9,10 @@ runs:
     - name: "Check tag"
       working-directory: ${{ inputs.working-directory }}
       run: |
-        [[ "v$(nix run nixpkgs#toml-cli --  get Cargo.toml package.version -r)" = "${{ github.ref_name  }}" ]] || (echo "Failed to validate package version. Does not match tag." && false)
+        [[ "v$(nix run --extra-experimental-features nix-command  --extra-experimental-features flakes nixpkgs#toml-cli --  get Cargo.toml package.version -r)" = "${{ github.ref_name  }}" ]] || (echo "Failed to validate package version. Does not match tag." && false)
 
     - name: "Publish macro"
       working-directory: ${{ inputs.working-directory }}
       run: |
-        nix run nixpkgs#cargo -- publish
+        nix run --extra-experimental-features nix-command  --extra-experimental-features flakes nixpkgs#cargo -- publish
   
