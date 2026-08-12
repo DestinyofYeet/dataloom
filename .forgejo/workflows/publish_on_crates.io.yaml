@@ -17,7 +17,8 @@ jobs:
       - name: "Install deps"
         run: |
           apt update
-          apt install -y git cargo nodejs
+          apt install -y git nodejs curl
+          curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | sh -s -- --daemon
 
       - uses: https://code.forgejo.org/actions/checkout@v7
         with:
@@ -26,14 +27,12 @@ jobs:
       - name: "Check tag"
         working-directory: "dataloom-macro"
         run: |
-          export PATH=$PATH:/root/.cargo/bin
-          cargo install toml-cli
-          [[ "v$(toml get Cargo.toml package.version -r)" = "${{ github.ref_name  }}" ]] || (echo "Failed to validate macro version. Does not match tag." && false)
+          [[ "v$(nix run nixpkgs#toml-cli --  get Cargo.toml package.version -r)" = "${{ github.ref_name  }}" ]] || (echo "Failed to validate macro version. Does not match tag." && false)
 
       - name: "Publish macro"
         working-directory: "dataloom-macro"
         run: |
-          cargo publish
+          nix run nixpkgs#cargo -- publish
 
   publish:
     runs-on: debian
@@ -49,11 +48,8 @@ jobs:
 
       - name: "Check tag"
         run: |
-          export PATH=$PATH:/root/.cargo/bin
-          cargo install toml-cli
-          test "v$(toml get Cargo.toml package.version -r)" = "${{ github.ref_name }}"
-          [[ "v$(toml get Cargo.toml package.version -r)" = "${{ github.ref_name  }}" ]] || (echo "Failed to validate version. Does not match tag." && false)
+          [[ "v$(nix run nixpkgs#toml-clie -- get Cargo.toml package.version -r)" = "${{ github.ref_name  }}" ]] || (echo "Failed to validate version. Does not match tag." && false)
 
       - name: "Publish code"
         run: |
-          cargo publish
+          nix run nixpkgs#cargo -- publish
