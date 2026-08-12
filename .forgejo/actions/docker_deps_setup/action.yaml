@@ -9,7 +9,3 @@ runs:
           apt install -y git nodejs curl xz
           curl --proto '=https' --tlsv1.2 -L https://nixos.org/nix/install | sh -s -- --daemon
 
-    - name: "Checkout repository"
-      uses: https://code.forgejo.org/actions/checkout@v7
-      with:
-        fetch-depth: 0
