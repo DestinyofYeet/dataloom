@@ -3,5 +3,8 @@ name: Setup dependencies
 runs:
   using: "composite"
   steps:
+    - name: "Install deps"
+      run: |
+        apt install sudo curl tee udev
     - name: "Install nix"
       uses: https://github.com/cachix/install-nix-action@v31

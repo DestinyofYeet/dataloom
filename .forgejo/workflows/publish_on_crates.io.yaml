@@ -16,7 +16,7 @@ jobs:
       - name: "Install minimal deps"
         run: |
           apt update
-          apt install -y git nodejs sudo
+          apt install -y git nodejs
 
       - name: "Checkout repository"
         uses: https://code.forgejo.org/actions/checkout@v7
@@ -34,7 +34,7 @@ jobs:
       - name: "Install minimal deps"
         run: |
           apt update
-          apt install -y git nodejs sudo
+          apt install -y git nodejs
 
       - name: "Checkout repository"
         uses: https://code.forgejo.org/actions/checkout@v7
