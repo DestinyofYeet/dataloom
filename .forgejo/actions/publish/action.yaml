@@ -16,5 +16,5 @@ runs:
       working-directory: ${{ inputs.working-directory }}
       shell: "nix develop --command bash {0}"
       run: |
-        cargo -- publish
+        cargo publish
   
