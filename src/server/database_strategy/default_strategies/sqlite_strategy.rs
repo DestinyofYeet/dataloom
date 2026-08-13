@@ -293,14 +293,17 @@ impl DatabaseStrategy for SqliteStrategy {
 
     fn table_exists(
         &self,
-        conn: &Connection,
+        conn: &Self::FunctionConnType<'_>,
         table_name: &str,
     ) -> Result<bool, DatabaseStrategyError> {
         conn.table_exists(None, table_name)
             .map_err(|e| DatabaseStrategyError::MigrateModel(e.to_string()))
     }
 
-    fn setup_migration_table(&self, conn: &Connection) -> Result<(), DatabaseStrategyError> {
+    fn setup_migration_table(
+        &self,
+        conn: &Self::FunctionConnType<'_>,
+    ) -> Result<(), DatabaseStrategyError> {
         if self.table_exists(conn, "_migrations")? {
             return Ok(());
         }
@@ -318,7 +321,7 @@ impl DatabaseStrategy for SqliteStrategy {
 
     fn on_migration_run(
         &self,
-        conn: &Connection,
+        conn: &Self::FunctionConnType<'_>,
         table_name: &str,
         count: i64,
     ) -> Result<(), DatabaseStrategyError> {
@@ -331,7 +334,7 @@ impl DatabaseStrategy for SqliteStrategy {
 
     fn get_last_migration(
         &self,
-        conn: &Connection,
+        conn: &Self::FunctionConnType<'_>,
         table_name: &str,
     ) -> Result<Option<i64>, DatabaseStrategyError> {
         let sql = "select * from _migrations where table_name = ?1";
@@ -350,7 +353,11 @@ impl DatabaseStrategy for SqliteStrategy {
         Ok(result)
     }
 
-    fn save_model<T>(&self, conn: &Connection, model: &mut T) -> Result<(), DatabaseStrategyError>
+    fn save_model<T>(
+        &self,
+        conn: &Self::FunctionConnType<'_>,
+        model: &mut T,
+    ) -> Result<(), DatabaseStrategyError>
     where
         T: SaveData + Model + FromIter + ValidateSaveData,
     {
@@ -450,7 +457,7 @@ impl DatabaseStrategy for SqliteStrategy {
 
     fn search_single_model<T>(
         &self,
-        conn: &Connection,
+        conn: &Self::FunctionConnType<'_>,
         query: SearchQuery,
     ) -> Result<Option<T>, DatabaseStrategyError>
     where
@@ -468,7 +475,7 @@ impl DatabaseStrategy for SqliteStrategy {
 
     fn search_multiple_model<T>(
         &self,
-        conn: &Connection,
+        conn: &Self::FunctionConnType<'_>,
         query: SearchQuery,
     ) -> Result<Vec<T>, DatabaseStrategyError>
     where
@@ -631,7 +638,7 @@ impl DatabaseStrategy for SqliteStrategy {
 
     fn remove_model<T: Model>(
         &self,
-        conn: &Connection,
+        conn: &Self::FunctionConnType<'_>,
         query: &SearchQuery,
     ) -> Result<(), DatabaseStrategyError> {
         let table_name = T::TABLE_NAME;

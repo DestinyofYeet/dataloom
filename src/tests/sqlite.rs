@@ -9,11 +9,11 @@ use crate::{
         search::SearchQuery,
         traits::model::Model,
     },
-    server::{
-        database_strategy::DatabaseStrategy,
-        database_tasks::{GetModelTask, SaveModelTask},
+    server::database_strategy::DatabaseStrategy,
+    tasks::{
+        default_tasks::database::{GetModelTask, SaveModelTask},
+        task::TaskState,
     },
-    tasks::task::TaskState,
     tests::setup_sqlite_server,
 };
 
