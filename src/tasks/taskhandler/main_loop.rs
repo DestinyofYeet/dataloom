@@ -6,7 +6,7 @@ use std::{
     },
 };
 
-use tracing::{debug, error, info, warn};
+use tracing::{debug, error, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -83,6 +83,17 @@ where
                                 let id = worker.get_id();
                                 respawn_worker_ids.push(id);
                                 warn!("Worker {id} is not running! It probably crashed.");
+                                if let Some(uuid) = worker.get_task() {
+                                    warn!("Worker {id} had task id {uuid}.");
+                                    match data.sender.send(TaskEvent::TaskDone(uuid)) {
+                                        Ok(_) => {}
+                                        Err(e) => {
+                                            error!(
+                                                "Failed to send done message for crashed worker: {e}"
+                                            );
+                                        }
+                                    }
+                                }
                             }
                         }
 
