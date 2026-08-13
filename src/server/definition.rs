@@ -1,35 +1,31 @@
 use std::sync::Arc;
 
 use crate::{
-    server::{
-        ServerError,
-        database_strategy::DatabaseStrategy,
-        memory_strategy::{self, MemoryStrategy},
-    },
+    server::{ServerError, database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
     tasks::{logstrategy::LogStrategy, taskhandler::TaskHandler},
 };
 
-pub struct DataloomServer<D, M>
+pub struct DataloomServer<D, ME>
 where
     D: DatabaseStrategy,
-    M: MemoryStrategy,
+    ME: MemoryStrategy,
 {
-    task_handler: TaskHandler<D, M>,
+    task_handler: TaskHandler<D, ME>,
     database_strategy: Arc<D>,
-    memory_strategy: Arc<M>,
+    memory_strategy: Arc<ME>,
     has_shutdown: bool,
 }
 
-impl<D, M> DataloomServer<D, M>
+impl<D, ME> DataloomServer<D, ME>
 where
     D: DatabaseStrategy + 'static,
-    M: MemoryStrategy + 'static,
+    ME: MemoryStrategy + 'static,
 {
     pub fn new(
         workers: u64,
         logging_strategy: impl LogStrategy + Send + Sync + 'static,
         database_strategy: D,
-        memory_strategy: M,
+        memory_strategy: ME,
     ) -> Result<Self, ServerError> {
         let db = Arc::new(database_strategy);
         let mem = Arc::new(memory_strategy);
@@ -50,7 +46,11 @@ where
         self.database_strategy.clone()
     }
 
-    pub fn get_task_handler(&self) -> &TaskHandler<D, M> {
+    pub fn get_memory(&self) -> Arc<ME> {
+        self.memory_strategy.clone()
+    }
+
+    pub fn get_task_handler(&self) -> &TaskHandler<D, ME> {
         &self.task_handler
     }
 
