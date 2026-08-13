@@ -11,7 +11,7 @@ use tracing::trace;
 use uuid::Uuid;
 
 use crate::{
-    server::database_strategy::DatabaseStrategy,
+    server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
     tasks::{
         task::{Task, TaskState},
         taskhandler::TaskEvent,
@@ -19,35 +19,40 @@ use crate::{
     },
 };
 
-pub enum WorkerCommand<D>
+pub enum WorkerCommand<D, ME>
 where
     D: DatabaseStrategy,
+    ME: MemoryStrategy,
 {
-    ProcessTask(Arc<Mutex<Task<D>>>),
+    ProcessTask(Arc<Mutex<Task<D, ME>>>),
     Init,
     Close,
 }
 
-pub struct Worker<D>
+pub struct Worker<D, ME>
 where
     D: DatabaseStrategy,
+    ME: MemoryStrategy,
 {
     id: u64,
     handle: RefCell<Option<JoinHandle<()>>>,
-    to_thread: Sender<WorkerCommand<D>>,
+    to_thread: Sender<WorkerCommand<D, ME>>,
     current_task: Arc<Mutex<Option<Uuid>>>,
 }
 
-impl<D> Worker<D>
+impl<D, ME> Worker<D, ME>
 where
     D: DatabaseStrategy + 'static,
+    ME: MemoryStrategy + 'static,
 {
     pub fn new(
         id: u64,
-        to_handler: Sender<TaskEvent<D>>,
+        to_handler: Sender<TaskEvent<D, ME>>,
         database_handle: Arc<D>,
+        memory_handle: Arc<ME>,
     ) -> Result<Self, WorkerError> {
-        let (tx, rx): (Sender<WorkerCommand<D>>, Receiver<WorkerCommand<D>>) = mpsc::channel();
+        let (tx, rx): (Sender<WorkerCommand<D, ME>>, Receiver<WorkerCommand<D, ME>>) =
+            mpsc::channel();
 
         tx.send(WorkerCommand::Init)
             .map_err(|e| WorkerError::Channel(e.to_string()))?;
@@ -73,7 +78,12 @@ where
                                 *current_task.lock().expect("to get lock") = Some(task.get_id());
                             }
                             task.set_state(TaskState::Running);
-                            let result = task.run(id, to_handler.clone(), database_handle.clone());
+                            let result = task.run(
+                                id,
+                                to_handler.clone(),
+                                database_handle.clone(),
+                                memory_handle.clone(),
+                            );
                             task.set_result(result);
                             task.set_state(TaskState::Done);
                             match to_handler.send(TaskEvent::TaskDone(task.get_id())) {
@@ -104,13 +114,13 @@ where
         })
     }
 
-    fn send_msg(&self, command: WorkerCommand<D>) -> Result<(), WorkerError> {
+    fn send_msg(&self, command: WorkerCommand<D, ME>) -> Result<(), WorkerError> {
         self.to_thread
             .send(command)
             .map_err(|e| WorkerError::Channel(e.to_string()))
     }
 
-    pub fn schedule_task(&self, task: Arc<Mutex<Task<D>>>) -> Result<(), WorkerError> {
+    pub fn schedule_task(&self, task: Arc<Mutex<Task<D, ME>>>) -> Result<(), WorkerError> {
         self.send_msg(WorkerCommand::ProcessTask(task.clone()))
     }
 

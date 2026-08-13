@@ -10,34 +10,42 @@ use tracing::{debug, error, warn};
 use uuid::Uuid;
 
 use crate::{
-    server::database_strategy::DatabaseStrategy,
+    server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
     tasks::{
         taskhandler::{TaskEvent, TaskHandler, TaskSubscriberEvent},
         worker::Worker,
     },
 };
 
-pub(super) struct MainLoopData<D>
+pub(super) struct MainLoopData<D, ME>
 where
     D: DatabaseStrategy,
+    ME: MemoryStrategy,
 {
-    pub(super) recv: Receiver<TaskEvent<D>>,
-    pub(super) sender: Sender<TaskEvent<D>>,
+    pub(super) recv: Receiver<TaskEvent<D, ME>>,
+    pub(super) sender: Sender<TaskEvent<D, ME>>,
     pub(super) max_workers: u64,
     pub(super) database: Arc<D>,
+    pub(super) memory: Arc<ME>,
 }
 
-impl<D> TaskHandler<D>
+impl<D, ME> TaskHandler<D, ME>
 where
     D: DatabaseStrategy + 'static,
+    ME: MemoryStrategy + 'static,
 {
-    pub(super) fn main_loop(data: MainLoopData<D>) {
-        let mut workers: Vec<Worker<D>> = Vec::with_capacity(data.max_workers as usize);
+    pub(super) fn main_loop(data: MainLoopData<D, ME>) {
+        let mut workers: Vec<Worker<D, ME>> = Vec::with_capacity(data.max_workers as usize);
 
         for i in 0..data.max_workers {
             workers.push(
-                Worker::new(i, data.sender.clone(), data.database.clone())
-                    .expect("to) create workers"),
+                Worker::new(
+                    i,
+                    data.sender.clone(),
+                    data.database.clone(),
+                    data.memory.clone(),
+                )
+                .expect("to) create workers"),
             );
         }
 
@@ -100,7 +108,12 @@ where
                         workers.retain(|e| e.is_running());
 
                         for id in respawn_worker_ids {
-                            match Worker::new(id, data.sender.clone(), data.database.clone()) {
+                            match Worker::new(
+                                id,
+                                data.sender.clone(),
+                                data.database.clone(),
+                                data.memory.clone(),
+                            ) {
                                 Ok(value) => {
                                     warn!("Respawned worker {id}");
                                     workers.push(value);
@@ -149,6 +162,7 @@ where
                         long_worker_count + data.max_workers,
                         data.sender.clone(),
                         data.database.clone(),
+                        data.memory.clone(),
                     ) {
                         Ok(value) => value,
                         Err(e) => {

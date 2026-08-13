@@ -5,7 +5,10 @@ use crate::{
         search::SearchQuery,
         traits::{from_iter::FromIter, model::Model},
     },
-    server::database_strategy::{DatabaseStrategy, DatabaseStrategyError},
+    server::{
+        database_strategy::{DatabaseStrategy, DatabaseStrategyError},
+        memory_strategy::MemoryStrategy,
+    },
     tasks::{
         runnable_info::RunnableInfo,
         taskrunnable::{TaskResultable, TaskRunnable},
@@ -33,12 +36,13 @@ where
     }
 }
 
-impl<'a, D, M> TaskRunnable<D> for GetModelTask<'a, M>
+impl<'a, D, M, ME> TaskRunnable<D, ME> for GetModelTask<'a, M>
 where
     D: DatabaseStrategy,
     M: Model + FromIter + Send + Sync + 'static,
+    ME: MemoryStrategy,
 {
-    fn run(&mut self, info: RunnableInfo<D>) -> Box<dyn Any + Send + Sync> {
+    fn run(&mut self, info: RunnableInfo<D, ME>) -> Box<dyn Any + Send + Sync> {
         let db = info.get_database();
         let result = db.search_single_model::<M>(&db.get_connection(), self.search.clone());
 

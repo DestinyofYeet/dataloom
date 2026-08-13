@@ -6,27 +6,29 @@ use std::{
 use uuid::Uuid;
 
 use crate::{
-    server::database_strategy::DatabaseStrategy,
+    server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
     tasks::{
         task::{Task, TaskState},
         taskrunnable::TaskResultable,
     },
 };
 
-pub struct TaskRef<T, D>
+pub struct TaskRef<T, D, ME>
 where
     D: DatabaseStrategy,
+    ME: MemoryStrategy,
 {
-    task: Arc<Mutex<Task<D>>>,
+    task: Arc<Mutex<Task<D, ME>>>,
     _m: PhantomData<T>,
 }
 
-impl<T, D> TaskRef<T, D>
+impl<T, D, ME> TaskRef<T, D, ME>
 where
     T: TaskResultable,
     D: DatabaseStrategy,
+    ME: MemoryStrategy,
 {
-    pub(crate) fn new(task: Arc<Mutex<Task<D>>>) -> Self {
+    pub(crate) fn new(task: Arc<Mutex<Task<D, ME>>>) -> Self {
         Self {
             task,
             _m: PhantomData,
@@ -39,9 +41,10 @@ where
     }
 }
 
-impl<T, D> TaskRef<T, D>
+impl<T, D, ME> TaskRef<T, D, ME>
 where
     D: DatabaseStrategy,
+    ME: MemoryStrategy,
 {
     pub fn get_id(&self) -> Uuid {
         self.task.lock().expect("to get lock").get_id()

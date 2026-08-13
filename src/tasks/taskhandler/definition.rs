@@ -9,17 +9,18 @@ use std::{
 use uuid::Uuid;
 
 use crate::{
-    server::database_strategy::DatabaseStrategy,
+    server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
     tasks::{logstrategy::LogStrategyType, task::Task, taskhandler::main_loop::MainLoopData},
 };
 
-pub(crate) enum TaskEvent<D>
+pub(crate) enum TaskEvent<D, ME>
 where
     D: DatabaseStrategy,
+    ME: MemoryStrategy,
 {
     Shutdown,
-    ProcessTask(Arc<Mutex<Task<D>>>),
-    ProcessLongTask(Arc<Mutex<Task<D>>>),
+    ProcessTask(Arc<Mutex<Task<D, ME>>>),
+    ProcessLongTask(Arc<Mutex<Task<D, ME>>>),
     TaskDone(Uuid),
     RegisterSubscriber {
         for_task: Uuid,
@@ -36,24 +37,32 @@ pub enum TaskSubscriberEvent {
     TaskDone,
 }
 
-pub struct TaskHandler<D>
+pub struct TaskHandler<D, ME>
 where
     D: DatabaseStrategy,
+    ME: MemoryStrategy,
 {
     pub(super) log_strategy: LogStrategyType,
     pub(super) max_workers: u64,
 
-    pub(super) to_handler: Sender<TaskEvent<D>>,
+    pub(super) to_handler: Sender<TaskEvent<D, ME>>,
 
     pub(super) handle: Option<JoinHandle<()>>,
     pub(super) database_handle: Arc<D>,
+    pub(super) memory_handle: Arc<ME>,
 }
 
-impl<D> TaskHandler<D>
+impl<D, ME> TaskHandler<D, ME>
 where
     D: DatabaseStrategy + 'static,
+    ME: MemoryStrategy + 'static,
 {
-    pub fn new(max_workers: u64, log_strategy: LogStrategyType, database_handle: Arc<D>) -> Self {
+    pub fn new(
+        max_workers: u64,
+        log_strategy: LogStrategyType,
+        database_handle: Arc<D>,
+        memory_handle: Arc<ME>,
+    ) -> Self {
         let (sender, receiver) = mpsc::channel();
 
         let data = MainLoopData {
@@ -61,6 +70,7 @@ where
             sender: sender.clone(),
             max_workers,
             database: database_handle.clone(),
+            memory: memory_handle.clone(),
         };
 
         let handle = thread::Builder::new()
@@ -76,6 +86,7 @@ where
             to_handler: sender,
             handle: Some(handle),
             database_handle,
+            memory_handle,
         }
     }
 }

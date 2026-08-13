@@ -198,7 +198,7 @@ dependencies = [
 
 [[package]]
 name = "dataloom"
-version = "0.1.47"
+version = "0.2.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -219,7 +219,7 @@ dependencies = [
 
 [[package]]
 name = "dataloom-macro"
-version = "0.1.47"
+version = "0.2.0"
 dependencies = [
  "quote",
  "syn 2.0.119",

@@ -2,7 +2,7 @@ use std::{any::Any, marker::PhantomData, sync::Arc};
 
 use crate::{
     models::{search::SearchQuery, traits::model::Model},
-    server::database_strategy::DatabaseStrategy,
+    server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
     tasks::{runnable_info::RunnableInfo, taskrunnable::TaskRunnable, worker_logger::WorkerLogger},
 };
 
@@ -26,14 +26,15 @@ where
     }
 }
 
-impl<D, M> TaskRunnable<D> for RemoveModelTask<M>
+impl<D, MO, ME> TaskRunnable<D, ME> for RemoveModelTask<MO>
 where
     D: DatabaseStrategy,
-    M: Model,
+    MO: Model,
+    ME: MemoryStrategy,
 {
-    fn run(&mut self, info: RunnableInfo<D>) -> Box<dyn Any + Send + Sync> {
+    fn run(&mut self, info: RunnableInfo<D, ME>) -> Box<dyn Any + Send + Sync> {
         let db = info.get_database();
         let conn = db.get_connection();
-        Box::new(db.remove_model::<M>(&conn, &self.search))
+        Box::new(db.remove_model::<MO>(&conn, &self.search))
     }
 }

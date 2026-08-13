@@ -5,6 +5,7 @@ use dataloom::models::column::create::{CreateColumn, CreateOptions};
 use dataloom::models::search::SearchQuery;
 use dataloom::models::traits::save_data::SaveData;
 use dataloom::models::{MigrationKind, ModelMigration};
+use dataloom::server::memory_strategy::default_strategies::local_storage::LocalMemory;
 use dataloom::{
     models::{column::ColumnType, traits::model::Model},
     server::{
@@ -141,8 +142,13 @@ impl Model for Test {
 // }
 
 fn main() {
-    let mut server =
-        DataloomServer::new(8, TracingStrategy {}, SqliteStrategy::new("./test.db")).unwrap();
+    let mut server = DataloomServer::new(
+        8,
+        TracingStrategy {},
+        SqliteStrategy::new("./test.db"),
+        LocalMemory::new(),
+    )
+    .unwrap();
 
     let db = server.get_database();
     db.migrate_model::<Test>().unwrap();

@@ -1,7 +1,6 @@
-pub mod database_strategy;
+pub mod default_strategies;
 mod definition;
 mod error;
-pub mod memory_strategy;
 
 pub use definition::*;
 pub use error::*;

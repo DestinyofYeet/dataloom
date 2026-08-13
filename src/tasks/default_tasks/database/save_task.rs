@@ -6,7 +6,10 @@ use crate::{
         model::Model,
         save_data::{SaveData, ValidateSaveData},
     },
-    server::database_strategy::{DatabaseStrategy, DatabaseStrategyError},
+    server::{
+        database_strategy::{DatabaseStrategy, DatabaseStrategyError},
+        memory_strategy::MemoryStrategy,
+    },
     tasks::{
         runnable_info::RunnableInfo,
         taskrunnable::{TaskResultable, TaskRunnable},
@@ -34,12 +37,13 @@ where
     }
 }
 
-impl<D, M> TaskRunnable<D> for SaveModelTask<M>
+impl<D, MO, ME> TaskRunnable<D, ME> for SaveModelTask<MO>
 where
     D: DatabaseStrategy,
-    M: Model + SaveData + FromIter + ValidateSaveData + Send + Sync,
+    MO: Model + SaveData + FromIter + ValidateSaveData + Send + Sync,
+    ME: MemoryStrategy,
 {
-    fn run(&mut self, info: RunnableInfo<D>) -> Box<dyn Any + Send + Sync> {
+    fn run(&mut self, info: RunnableInfo<D, ME>) -> Box<dyn Any + Send + Sync> {
         let logger = info.get_logger();
         let db = info.get_database();
         let conn = db.get_connection();

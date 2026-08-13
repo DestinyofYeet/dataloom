@@ -1,11 +1,12 @@
 use crate::{
-    server::database_strategy::DatabaseStrategy,
+    server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
     tasks::taskhandler::{TaskEvent, TaskHandler, TaskHandlerError},
 };
 
-impl<D> TaskHandler<D>
+impl<D, M> TaskHandler<D, M>
 where
     D: DatabaseStrategy,
+    M: MemoryStrategy,
 {
     pub(crate) fn shutdown(&mut self) -> Result<(), TaskHandlerError> {
         if let Some(handle) = self.handle.take() {

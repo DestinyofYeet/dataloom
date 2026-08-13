@@ -16,6 +16,7 @@ use dataloom::{
         database_strategy::{
             DatabaseStrategy, TransactionOptions, default_strategies::SqliteStrategy,
         },
+        memory_strategy::{MemoryStrategy, default_strategies::local_storage::LocalMemory},
     },
     tasks::{
         default_tasks::database::SaveModelTask,
@@ -48,11 +49,12 @@ impl PrintTask {
     }
 }
 
-impl<D> TaskRunnable<D> for PrintTask
+impl<D, ME> TaskRunnable<D, ME> for PrintTask
 where
     D: DatabaseStrategy,
+    ME: MemoryStrategy,
 {
-    fn run(&mut self, info: RunnableInfo<D>) -> Box<dyn Any + Sync + Send> {
+    fn run(&mut self, info: RunnableInfo<D, ME>) -> Box<dyn Any + Sync + Send> {
         let logger = info.get_logger();
         thread::sleep(Duration::from_millis(300));
         logger.info("print");
@@ -71,11 +73,12 @@ pub struct LongTask {
     pub stop: Arc<Mutex<bool>>,
 }
 
-impl<D> TaskRunnable<D> for LongTask
+impl<D, ME> TaskRunnable<D, ME> for LongTask
 where
     D: DatabaseStrategy,
+    ME: MemoryStrategy,
 {
-    fn run(&mut self, info: RunnableInfo<D>) -> Box<dyn Any + Send + Sync> {
+    fn run(&mut self, info: RunnableInfo<D, ME>) -> Box<dyn Any + Send + Sync> {
         let logger = info.get_logger();
         loop {
             logger.info("long task");
@@ -105,11 +108,12 @@ impl TaskResultable for LongTask {
 
 pub struct ShortTask {}
 
-impl<D> TaskRunnable<D> for ShortTask
+impl<D, ME> TaskRunnable<D, ME> for ShortTask
 where
     D: DatabaseStrategy,
+    ME: MemoryStrategy,
 {
-    fn run(&mut self, info: RunnableInfo<D>) -> Box<dyn Any + Send + Sync> {
+    fn run(&mut self, info: RunnableInfo<D, ME>) -> Box<dyn Any + Send + Sync> {
         info.get_logger().info("short task");
 
         Box::new(())
@@ -245,8 +249,12 @@ fn main() -> Result<(), anyhow::Error> {
         .with_env_filter(EnvFilter::new(level))
         .init();
 
-    let mut server =
-        DataloomServer::new(8, TracingStrategy {}, SqliteStrategy::new("tmp/db.sqlite"))?;
+    let mut server = DataloomServer::new(
+        8,
+        TracingStrategy {},
+        SqliteStrategy::new("tmp/db.sqlite"),
+        LocalMemory::new(),
+    )?;
 
     let mut group = Group {
         id: None,
@@ -320,9 +328,10 @@ fn main() -> Result<(), anyhow::Error> {
     Ok(())
 }
 
-fn test<D>(server: &DataloomServer<D>)
+fn test<D, M>(server: &DataloomServer<D, M>)
 where
     D: DatabaseStrategy + 'static,
+    M: MemoryStrategy + 'static,
 {
     let db = server.get_database();
     db.with_transaction(|tx| {
