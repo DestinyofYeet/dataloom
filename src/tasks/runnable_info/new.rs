@@ -10,7 +10,7 @@ where
     D: DatabaseStrategy,
     ME: MemoryStrategy,
 {
-    pub fn new(
+    pub(crate) fn new(
         logger: WorkerLogger,
         to_handler: Sender<TaskEvent<D, ME>>,
         database_handle: Arc<D>,

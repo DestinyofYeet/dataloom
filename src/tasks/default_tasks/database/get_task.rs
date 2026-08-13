@@ -1,4 +1,4 @@
-use std::{any::Any, marker::PhantomData, sync::Arc};
+use std::{any::Any, marker::PhantomData};
 
 use crate::{
     models::{
@@ -12,7 +12,6 @@ use crate::{
     tasks::{
         runnable_info::RunnableInfo,
         taskrunnable::{TaskResultable, TaskRunnable},
-        worker_logger::WorkerLogger,
     },
 };
 

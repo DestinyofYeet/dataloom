@@ -1,5 +1,3 @@
-use tracing::error;
-
 use crate::models::column::ColumnType;
 use std::collections::HashSet;
 

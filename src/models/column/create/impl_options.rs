@@ -1,8 +1,5 @@
-use tracing::error;
-
-use crate::models::column::{
-    ColumnType,
-    create::{CreateColumnOptionsValues, CreateOptions, CreateTableOptionValues},
+use crate::models::column::create::{
+    CreateColumnOptionsValues, CreateOptions, CreateTableOptionValues,
 };
 
 impl CreateOptions {

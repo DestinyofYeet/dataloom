@@ -1,4 +1,4 @@
-use std::{any::Any, sync::Arc};
+use std::any::Any;
 
 use crate::{
     models::traits::{
@@ -13,7 +13,6 @@ use crate::{
     tasks::{
         runnable_info::RunnableInfo,
         taskrunnable::{TaskResultable, TaskRunnable},
-        worker_logger::WorkerLogger,
     },
 };
 

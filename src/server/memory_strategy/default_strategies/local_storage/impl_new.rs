@@ -9,3 +9,9 @@ impl LocalMemory {
         }
     }
 }
+
+impl Default for LocalMemory {
+    fn default() -> Self {
+        Self::new()
+    }
+}
