@@ -1,4 +1,4 @@
-use crate::models::column::{CreateColumn, ModifyColumn};
+use crate::models::column::{ModifyColumn, create::CreateColumn};
 
 pub enum MigrationKind {
     Create(Vec<CreateColumn>),

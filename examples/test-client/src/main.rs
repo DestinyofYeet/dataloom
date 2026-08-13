@@ -4,7 +4,10 @@ use dataloom::{
     dataloom_macro::{FromIter, SaveData},
     models::{
         MigrationKind, ModelMigration,
-        column::{ColumnType, ColumnValue, CreateColumn, CreateOptions},
+        column::{
+            ColumnType, ColumnValue,
+            create::{CreateColumn, CreateOptions},
+        },
         search::SearchQuery,
         traits::model::Model,
     },
@@ -13,13 +16,12 @@ use dataloom::{
         database_strategy::{
             DatabaseStrategy, TransactionOptions, default_strategies::SqliteStrategy,
         },
-        database_tasks::SaveModelTask,
     },
     tasks::{
-        logstrategy::{LogStrategyType, default_strategies::tracing_strategy::TracingStrategy},
+        default_tasks::database::SaveModelTask,
+        logstrategy::default_strategies::tracing_strategy::TracingStrategy,
         runnable_info::RunnableInfo,
         taskrunnable::{TaskResultable, TaskRunnable},
-        worker_logger::WorkerLogger,
     },
 };
 use serde::Serialize;

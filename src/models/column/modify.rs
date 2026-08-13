@@ -1,4 +1,4 @@
-use crate::models::column::{ColumnType, CreateOptions};
+use crate::models::column::{ColumnType, create::CreateOptions};
 
 #[derive(Debug)]
 pub enum ModifyColumnOptionsValues {

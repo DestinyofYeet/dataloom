@@ -2,7 +2,10 @@ use crate::{
     self as dataloom,
     models::{
         MigrationKind, ModelMigration,
-        column::{ColumnType, CreateColumn, CreateOptions},
+        column::{
+            ColumnType,
+            create::{CreateColumn, CreateOptions},
+        },
         search::SearchQuery,
         traits::model::Model,
     },

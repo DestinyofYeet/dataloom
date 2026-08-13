@@ -1,14 +1,12 @@
 use std::sync::LazyLock;
 
 use dataloom::dataloom_macro::{FromIter, SaveData};
+use dataloom::models::column::create::{CreateColumn, CreateOptions};
 use dataloom::models::search::SearchQuery;
 use dataloom::models::traits::save_data::SaveData;
 use dataloom::models::{MigrationKind, ModelMigration};
 use dataloom::{
-    models::{
-        column::{ColumnType, CreateColumn, CreateOptions},
-        traits::model::Model,
-    },
+    models::{column::ColumnType, traits::model::Model},
     server::{
         DataloomServer,
         database_strategy::{DatabaseStrategy, default_strategies::SqliteStrategy},

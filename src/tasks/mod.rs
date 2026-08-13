@@ -1,3 +1,4 @@
+pub mod default_tasks;
 pub mod logstrategy;
 pub mod runnable_info;
 pub mod task;

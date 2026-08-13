@@ -1,17 +1,12 @@
-use crate::models::column::ColumnType;
-use crate::models::column::ColumnValue;
 use crate::models::traits::from_iter::FromIter;
 use crate::models::traits::model::Model;
 use crate::models::traits::save_data::SaveData;
 use crate::models::traits::save_data::ValidateSaveData;
-use std::{collections::HashSet, ops::Deref};
+use std::ops::Deref;
 
 use thiserror::Error;
 
-use crate::models::{
-    column::{CreateOptions, CreateTableOptionValues, ModifyColumnOptionsValues},
-    search::SearchQuery,
-};
+use crate::models::search::SearchQuery;
 
 pub enum TransactionOptions {
     Commit,

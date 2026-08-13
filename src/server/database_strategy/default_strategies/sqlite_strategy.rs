@@ -1,3 +1,7 @@
+use crate::models::column::ModifyColumnOptionsValues;
+use crate::models::column::create::CreateColumnOptionsValues;
+use crate::models::column::create::CreateOptions;
+use crate::models::column::create::CreateTableOptionValues;
 use std::{
     any::{type_name, type_name_of_val},
     collections::HashSet,
@@ -14,10 +18,7 @@ use roxygen::roxygen;
 use crate::{
     models::{
         MigrationKind,
-        column::{
-            ColumnType, ColumnValue, CreateColumnOptionsValues, CreateOptions,
-            CreateTableOptionValues, ModifyColumnOptionsValues,
-        },
+        column::{ColumnType, ColumnValue},
         search::{SearchOptions, SearchOrderByOptions, SearchQuery, SearchSelectOptions},
         traits::{
             from_iter::{FromIter, FromIterValue},

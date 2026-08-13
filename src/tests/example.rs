@@ -1,3 +1,4 @@
+use crate::models::column::create::{CreateColumn, CreateOptions};
 use crate::models::search::SearchQuery;
 use crate::server::database_strategy::DatabaseStrategy;
 use std::sync::LazyLock;
@@ -5,7 +6,7 @@ use std::sync::LazyLock;
 use dataloom_macro::{FromIter, SaveData};
 
 use crate as dataloom;
-use crate::models::column::{ColumnType, CreateColumn, CreateOptions};
+use crate::models::column::ColumnType;
 use crate::models::{MigrationKind, ModelMigration};
 
 use crate::{models::traits::model::Model, tests::setup_sqlite_server};
