@@ -3,4 +3,6 @@ target/
 .direnv/
 tmp/
 
+.cargo/
+
 result
