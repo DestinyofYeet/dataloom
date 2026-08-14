@@ -14,7 +14,7 @@ use crate::{
     server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
     tasks::{
         task::{Task, TaskState},
-        taskhandler::TaskEvent,
+        taskhandler::{TaskEvent, task_actions::TaskActions},
         worker::WorkerError,
     },
 };
@@ -48,9 +48,11 @@ where
     pub fn new(
         id: u64,
         to_handler: Sender<TaskEvent<D, ME>>,
+        task_actions: Arc<TaskActions<D, ME>>,
         database_handle: Arc<D>,
         memory_handle: Arc<ME>,
     ) -> Result<Self, WorkerError> {
+        #[allow(clippy::type_complexity)]
         let (tx, rx): (Sender<WorkerCommand<D, ME>>, Receiver<WorkerCommand<D, ME>>) =
             mpsc::channel();
 
@@ -80,7 +82,7 @@ where
                             task.set_state(TaskState::Running);
                             let result = task.run(
                                 id,
-                                to_handler.clone(),
+                                task_actions.clone(),
                                 database_handle.clone(),
                                 memory_handle.clone(),
                             );

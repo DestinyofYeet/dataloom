@@ -2,7 +2,10 @@ use std::sync::Arc;
 
 use crate::{
     server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
-    tasks::{runnable_info::RunnableInfo, worker_logger::WorkerLogger},
+    tasks::{
+        runnable_info::RunnableInfo, taskhandler::task_actions::TaskActions,
+        worker_logger::WorkerLogger,
+    },
 };
 
 impl<D, ME> RunnableInfo<D, ME>
@@ -20,5 +23,9 @@ where
 
     pub fn get_memory(&self) -> Arc<ME> {
         self.memory_handle.clone()
+    }
+
+    pub fn get_task_actions(&self) -> &Arc<TaskActions<D, ME>> {
+        &self.task_actions
     }
 }

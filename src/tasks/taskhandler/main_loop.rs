@@ -12,7 +12,7 @@ use uuid::Uuid;
 use crate::{
     server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
     tasks::{
-        taskhandler::{TaskEvent, TaskHandler, TaskSubscriberEvent},
+        taskhandler::{TaskEvent, TaskHandler, TaskSubscriberEvent, task_actions::TaskActions},
         worker::Worker,
     },
 };
@@ -27,6 +27,7 @@ where
     pub(super) max_workers: u64,
     pub(super) database: Arc<D>,
     pub(super) memory: Arc<ME>,
+    pub(super) task_actions: Arc<TaskActions<D, ME>>,
 }
 
 impl<D, ME> TaskHandler<D, ME>
@@ -42,6 +43,7 @@ where
                 Worker::new(
                     i,
                     data.sender.clone(),
+                    data.task_actions.clone(),
                     data.database.clone(),
                     data.memory.clone(),
                 )
@@ -111,6 +113,7 @@ where
                             match Worker::new(
                                 id,
                                 data.sender.clone(),
+                                data.task_actions.clone(),
                                 data.database.clone(),
                                 data.memory.clone(),
                             ) {
@@ -161,6 +164,7 @@ where
                     let worker = match Worker::new(
                         long_worker_count + data.max_workers,
                         data.sender.clone(),
+                        data.task_actions.clone(),
                         data.database.clone(),
                         data.memory.clone(),
                     ) {

@@ -2,7 +2,7 @@ use std::any::Any;
 
 use crate::{
     server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
-    tasks::{runnable_info::RunnableInfo, task::TaskResult, worker_logger::WorkerLogger},
+    tasks::{runnable_info::RunnableInfo, task::TaskResult},
 };
 
 pub trait TaskRunnable<D, ME>

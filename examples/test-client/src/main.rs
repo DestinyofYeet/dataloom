@@ -22,6 +22,7 @@ use dataloom::{
         default_tasks::database::SaveModelTask,
         logstrategy::default_strategies::tracing_strategy::TracingStrategy,
         runnable_info::RunnableInfo,
+        taskhandler::task_actions::spawn_options::TaskSpawnOptions,
         taskrunnable::{TaskResultable, TaskRunnable},
     },
 };
@@ -91,7 +92,10 @@ where
             }
         }
 
-        match info.spawn_task(ShortTask {}) {
+        match info
+            .get_task_actions()
+            .spawn_task(ShortTask {}, TaskSpawnOptions::new())
+        {
             Ok(_) => {}
             Err(e) => logger.error(&format!("Failed to spawn short task: {e}")),
         }
@@ -308,7 +312,7 @@ fn main() -> Result<(), anyhow::Error> {
     let task_handler = server.get_task_handler();
     task_handler.spawn_task::<PrintTask>(PrintTask::new())?;
 
-    let task = task_handler.spawn_task(save_task);
+    let _task = task_handler.spawn_task(save_task);
     db.remove_model::<User>(
         &conn,
         &SearchQuery::empty().add_constraint(("username", "roflrofl")),

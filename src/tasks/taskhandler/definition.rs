@@ -10,7 +10,11 @@ use uuid::Uuid;
 
 use crate::{
     server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
-    tasks::{logstrategy::LogStrategyType, task::Task, taskhandler::main_loop::MainLoopData},
+    tasks::{
+        logstrategy::LogStrategyType,
+        task::Task,
+        taskhandler::{main_loop::MainLoopData, task_actions::TaskActions},
+    },
 };
 
 pub(crate) enum TaskEvent<D, ME>
@@ -37,6 +41,7 @@ pub enum TaskSubscriberEvent {
     TaskDone,
 }
 
+#[allow(dead_code)]
 pub struct TaskHandler<D, ME>
 where
     D: DatabaseStrategy,
@@ -46,6 +51,8 @@ where
     pub(super) max_workers: u64,
 
     pub(super) to_handler: Sender<TaskEvent<D, ME>>,
+
+    pub(super) task_actions: Arc<TaskActions<D, ME>>,
 
     pub(super) handle: Option<JoinHandle<()>>,
     pub(super) database_handle: Arc<D>,
@@ -65,12 +72,15 @@ where
     ) -> Self {
         let (sender, receiver) = mpsc::channel();
 
+        let task_actions = Arc::new(TaskActions::new(sender.clone(), log_strategy.clone()));
+
         let data = MainLoopData {
             recv: receiver,
             sender: sender.clone(),
             max_workers,
             database: database_handle.clone(),
             memory: memory_handle.clone(),
+            task_actions: task_actions.clone(),
         };
 
         let handle = thread::Builder::new()
@@ -87,6 +97,7 @@ where
             handle: Some(handle),
             database_handle,
             memory_handle,
+            task_actions,
         }
     }
 }

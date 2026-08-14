@@ -1,8 +1,11 @@
-use std::sync::{Arc, mpsc::Sender};
+use std::sync::Arc;
 
 use crate::{
     server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
-    tasks::{runnable_info::RunnableInfo, taskhandler::TaskEvent, worker_logger::WorkerLogger},
+    tasks::{
+        runnable_info::RunnableInfo, taskhandler::task_actions::TaskActions,
+        worker_logger::WorkerLogger,
+    },
 };
 
 impl<D, ME> RunnableInfo<D, ME>
@@ -12,13 +15,13 @@ where
 {
     pub(crate) fn new(
         logger: WorkerLogger,
-        to_handler: Sender<TaskEvent<D, ME>>,
         database_handle: Arc<D>,
         memory_handle: Arc<ME>,
+        task_actions: Arc<TaskActions<D, ME>>,
     ) -> Self {
         Self {
             logger,
-            to_handler,
+            task_actions,
             database_handle,
             memory_handle,
         }

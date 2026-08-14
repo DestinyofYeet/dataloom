@@ -1,15 +1,13 @@
-use std::{
-    any::Any,
-    sync::{Arc, mpsc::Sender},
-};
+use std::{any::Any, sync::Arc};
 
 use uuid::Uuid;
 
 use crate::{
     server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
     tasks::{
-        logstrategy::LogStrategyType, runnable_info::RunnableInfo, taskhandler::TaskEvent,
-        taskrunnable::TaskRunnable, worker_logger::WorkerLogger,
+        logstrategy::LogStrategyType, runnable_info::RunnableInfo,
+        taskhandler::task_actions::TaskActions, taskrunnable::TaskRunnable,
+        worker_logger::WorkerLogger,
     },
 };
 
@@ -54,12 +52,12 @@ where
     pub(crate) fn run(
         &mut self,
         worker_id: u64,
-        to_handler: Sender<TaskEvent<D, ME>>,
+        task_actions: Arc<TaskActions<D, ME>>,
         database_handle: Arc<D>,
         memory_handle: Arc<ME>,
     ) -> TaskResult {
         let logger = WorkerLogger::new(self.logger.clone(), worker_id);
-        let info = RunnableInfo::new(logger, to_handler, database_handle, memory_handle);
+        let info = RunnableInfo::new(logger, database_handle, memory_handle, task_actions);
         self.runnable.run(info)
     }
 

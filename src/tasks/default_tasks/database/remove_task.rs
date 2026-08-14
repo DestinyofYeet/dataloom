@@ -3,7 +3,7 @@ use std::{any::Any, marker::PhantomData};
 use crate::{
     models::{search::SearchQuery, traits::model::Model},
     server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
-    tasks::{runnable_info::RunnableInfo, taskrunnable::TaskRunnable, worker_logger::WorkerLogger},
+    tasks::{runnable_info::RunnableInfo, taskrunnable::TaskRunnable},
 };
 
 pub struct RemoveModelTask<M>

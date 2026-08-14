@@ -1,10 +1,9 @@
-use std::sync::{Arc, Mutex};
-
 use crate::{
     server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
     tasks::{
-        task::{Runnable, Task},
-        taskhandler::{TaskEvent, TaskHandler, TaskHandlerError},
+        taskhandler::{
+            TaskHandler, TaskHandlerError, task_actions::spawn_options::TaskSpawnOptions,
+        },
         taskref::TaskRef,
         taskrunnable::{TaskResultable, TaskRunnable},
     },
@@ -22,11 +21,7 @@ where
     where
         T: TaskResultable + TaskRunnable<D, ME> + Send + Sync + 'static,
     {
-        let runnable: Runnable<D, ME> = Box::new(runnable);
-        let task = Arc::new(Mutex::new(Task::new(runnable, self.log_strategy.clone())));
-
-        let task_ref = TaskRef::new(task.clone());
-        self.to_handler.send(TaskEvent::ProcessLongTask(task))?;
-        Ok(task_ref)
+        self.task_actions
+            .spawn_task(runnable, TaskSpawnOptions::new().set_long_running())
     }
 }
