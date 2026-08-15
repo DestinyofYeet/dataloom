@@ -5,7 +5,7 @@ use crate::server::memory_strategy::{
 };
 
 impl MemoryStrategy for LocalMemory {
-    fn store<T>(&self, key: &str, item: T) -> Result<(), MemoryError>
+    fn store_key<T>(&self, key: &str, item: T) -> Result<(), MemoryError>
     where
         T: serde::Serialize + std::fmt::Debug,
     {
@@ -22,7 +22,7 @@ impl MemoryStrategy for LocalMemory {
         Ok(())
     }
 
-    fn retrieve<T>(
+    fn retrieve_key<T>(
         &self,
         key: &str,
     ) -> Result<Option<T>, crate::server::memory_strategy::MemoryError>
