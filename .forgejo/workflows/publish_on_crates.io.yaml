@@ -10,23 +10,23 @@ env:
   CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN  }}
 
 jobs:
-  publish_macro:
-    runs-on: debian
-    steps:      
-      - name: "Install minimal deps"
-        run: |
-          apt update
-          apt install -y git nodejs
+  # publish_macro:
+  #   runs-on: debian
+  #   steps:      
+  #     - name: "Install minimal deps"
+  #       run: |
+  #         apt update
+  #         apt install -y git nodejs
 
-      - name: "Checkout repository"
-        uses: https://code.forgejo.org/actions/checkout@v7
-        with:
-          fetch-depth: 0
+  #     - name: "Checkout repository"
+  #       uses: https://code.forgejo.org/actions/checkout@v7
+  #       with:
+  #         fetch-depth: 0
 
-      - uses: ./.forgejo/actions/docker_deps_setup
-      - uses: ./.forgejo/actions/publish
-        with:
-          working-directory: "dataloom-macro"
+  #     - uses: ./.forgejo/actions/docker_deps_setup
+  #     - uses: ./.forgejo/actions/publish
+  #       with:
+  #         working-directory: "dataloom-macro"
 
   publish:
     runs-on: debian
