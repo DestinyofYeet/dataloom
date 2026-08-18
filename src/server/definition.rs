@@ -7,12 +7,12 @@ use crate::{
 
 pub struct DataloomServer<D, ME>
 where
-    D: DatabaseStrategy,
-    ME: MemoryStrategy,
+    D: DatabaseStrategy + 'static,
+    ME: MemoryStrategy + 'static,
 {
     task_handler: TaskHandler<D, ME>,
-    database_strategy: Arc<D>,
-    memory_strategy: Arc<ME>,
+    database_strategy: &'static D,
+    memory_strategy: &'static ME,
     has_shutdown: bool,
 }
 
@@ -27,27 +27,22 @@ where
         database_strategy: D,
         memory_strategy: ME,
     ) -> Result<Self, ServerError> {
-        let db = Arc::new(database_strategy);
-        let mem = Arc::new(memory_strategy);
+        let db = Box::leak(Box::new(database_strategy));
+        let mem = Box::leak(Box::new(memory_strategy));
         Ok(Self {
-            task_handler: TaskHandler::new(
-                workers,
-                Arc::new(logging_strategy),
-                db.clone(),
-                mem.clone(),
-            ),
-            database_strategy: db.clone(),
+            task_handler: TaskHandler::new(workers, Arc::new(logging_strategy), db, mem),
+            database_strategy: db,
             has_shutdown: false,
-            memory_strategy: mem.clone(),
+            memory_strategy: mem,
         })
     }
 
-    pub fn get_database(&self) -> Arc<D> {
-        self.database_strategy.clone()
+    pub fn get_database(&self) -> &D {
+        self.database_strategy
     }
 
-    pub fn get_memory(&self) -> Arc<ME> {
-        self.memory_strategy.clone()
+    pub fn get_memory(&self) -> &ME {
+        self.memory_strategy
     }
 
     pub fn get_task_handler(&self) -> &TaskHandler<D, ME> {

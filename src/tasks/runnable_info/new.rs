@@ -8,15 +8,15 @@ use crate::{
     },
 };
 
-impl<D, ME> RunnableInfo<D, ME>
+impl<'a, D, ME> RunnableInfo<'a, D, ME>
 where
     D: DatabaseStrategy,
     ME: MemoryStrategy,
 {
     pub(crate) fn new(
         logger: WorkerLogger,
-        database_handle: Arc<D>,
-        memory_handle: Arc<ME>,
+        database_handle: &'a D,
+        memory_handle: &'a ME,
         task_actions: Arc<TaskActions<D, ME>>,
     ) -> Self {
         Self {

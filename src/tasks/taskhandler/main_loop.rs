@@ -19,14 +19,14 @@ use crate::{
 
 pub(super) struct MainLoopData<D, ME>
 where
-    D: DatabaseStrategy,
-    ME: MemoryStrategy,
+    D: DatabaseStrategy + 'static,
+    ME: MemoryStrategy + 'static,
 {
     pub(super) recv: Receiver<TaskEvent<D, ME>>,
     pub(super) sender: Sender<TaskEvent<D, ME>>,
     pub(super) max_workers: u64,
-    pub(super) database: Arc<D>,
-    pub(super) memory: Arc<ME>,
+    pub(super) database: &'static D,
+    pub(super) memory: &'static ME,
     pub(super) task_actions: Arc<TaskActions<D, ME>>,
 }
 
@@ -44,8 +44,8 @@ where
                     i,
                     data.sender.clone(),
                     data.task_actions.clone(),
-                    data.database.clone(),
-                    data.memory.clone(),
+                    data.database,
+                    data.memory,
                 )
                 .expect("to) create workers"),
             );
@@ -114,8 +114,8 @@ where
                                 id,
                                 data.sender.clone(),
                                 data.task_actions.clone(),
-                                data.database.clone(),
-                                data.memory.clone(),
+                                data.database,
+                                data.memory,
                             ) {
                                 Ok(value) => {
                                     warn!("Respawned worker {id}");
@@ -165,8 +165,8 @@ where
                         long_worker_count + data.max_workers,
                         data.sender.clone(),
                         data.task_actions.clone(),
-                        data.database.clone(),
-                        data.memory.clone(),
+                        data.database,
+                        data.memory,
                     ) {
                         Ok(value) => value,
                         Err(e) => {

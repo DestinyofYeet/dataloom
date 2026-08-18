@@ -5,13 +5,13 @@ use crate::{
     tasks::{taskhandler::task_actions::TaskActions, worker_logger::WorkerLogger},
 };
 
-pub struct RunnableInfo<D, ME>
+pub struct RunnableInfo<'a, D, ME>
 where
     D: DatabaseStrategy,
-    ME: MemoryStrategy,
+    ME: MemoryStrategy + 'static,
 {
     pub(super) logger: WorkerLogger,
-    pub(super) database_handle: Arc<D>,
-    pub(super) memory_handle: Arc<ME>,
+    pub(super) database_handle: &'a D,
+    pub(super) memory_handle: &'a ME,
     pub(super) task_actions: Arc<TaskActions<D, ME>>,
 }

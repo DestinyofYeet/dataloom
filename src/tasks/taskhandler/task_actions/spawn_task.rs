@@ -16,7 +16,7 @@ use crate::{
 impl<D, ME> TaskActions<D, ME>
 where
     D: DatabaseStrategy,
-    ME: MemoryStrategy,
+    ME: MemoryStrategy + 'static,
 {
     pub fn spawn_task<T>(
         &self,

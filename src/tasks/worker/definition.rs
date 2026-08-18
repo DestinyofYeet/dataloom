@@ -32,7 +32,7 @@ where
 pub struct Worker<D, ME>
 where
     D: DatabaseStrategy,
-    ME: MemoryStrategy,
+    ME: MemoryStrategy + 'static,
 {
     id: u64,
     handle: RefCell<Option<JoinHandle<()>>>,
@@ -49,8 +49,8 @@ where
         id: u64,
         to_handler: Sender<TaskEvent<D, ME>>,
         task_actions: Arc<TaskActions<D, ME>>,
-        database_handle: Arc<D>,
-        memory_handle: Arc<ME>,
+        database_handle: &'static D,
+        memory_handle: &'static ME,
     ) -> Result<Self, WorkerError> {
         #[allow(clippy::type_complexity)]
         let (tx, rx): (Sender<WorkerCommand<D, ME>>, Receiver<WorkerCommand<D, ME>>) =
@@ -80,12 +80,8 @@ where
                                 *current_task.lock().expect("to get lock") = Some(task.get_id());
                             }
                             task.set_state(TaskState::Running);
-                            let result = task.run(
-                                id,
-                                task_actions.clone(),
-                                database_handle.clone(),
-                                memory_handle.clone(),
-                            );
+                            let result =
+                                task.run(id, task_actions.clone(), database_handle, memory_handle);
                             task.set_result(result);
                             task.set_state(TaskState::Done);
                             match to_handler.send(TaskEvent::TaskDone(task.get_id())) {

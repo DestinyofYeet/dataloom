@@ -37,7 +37,7 @@ where
 impl<D, ME> Task<D, ME>
 where
     D: DatabaseStrategy,
-    ME: MemoryStrategy,
+    ME: MemoryStrategy + 'static,
 {
     pub(crate) fn new(runnable: Runnable<D, ME>, logger: LogStrategyType) -> Self {
         Self {
@@ -49,13 +49,16 @@ where
         }
     }
 
-    pub(crate) fn run(
+    pub(crate) fn run<'a>(
         &mut self,
         worker_id: u64,
         task_actions: Arc<TaskActions<D, ME>>,
-        database_handle: Arc<D>,
-        memory_handle: Arc<ME>,
-    ) -> TaskResult {
+        database_handle: &D,
+        memory_handle: &ME,
+    ) -> TaskResult
+    where
+        Self: 'a,
+    {
         let logger = WorkerLogger::new(self.logger.clone(), worker_id);
         let info = RunnableInfo::new(logger, database_handle, memory_handle, task_actions);
         self.runnable.run(info)
