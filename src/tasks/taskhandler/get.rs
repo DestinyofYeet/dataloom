@@ -5,7 +5,7 @@ use crate::{
     tasks::taskhandler::{TaskHandler, task_actions::TaskActions},
 };
 
-impl<'a, D, ME> TaskHandler<'a, D, ME>
+impl<D, ME> TaskHandler<D, ME>
 where
     D: DatabaseStrategy,
     ME: MemoryStrategy,

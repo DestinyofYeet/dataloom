@@ -42,7 +42,7 @@ pub enum TaskSubscriberEvent {
 }
 
 #[allow(dead_code)]
-pub struct TaskHandler<'a, D, ME>
+pub struct TaskHandler<D, ME>
 where
     D: DatabaseStrategy,
     ME: MemoryStrategy,
@@ -55,11 +55,11 @@ where
     pub(super) task_actions: Arc<TaskActions<D, ME>>,
 
     pub(super) handle: Option<JoinHandle<()>>,
-    pub(super) database_handle: &'a D,
-    pub(super) memory_handle: &'a ME,
+    pub(super) database_handle: Arc<D>,
+    pub(super) memory_handle: Arc<ME>,
 }
 
-impl<'a, D, ME> TaskHandler<'a, D, ME>
+impl<D, ME> TaskHandler<D, ME>
 where
     D: DatabaseStrategy + 'static,
     ME: MemoryStrategy + 'static,
@@ -67,8 +67,8 @@ where
     pub fn new(
         max_workers: u64,
         log_strategy: LogStrategyType,
-        database_handle: &'static D,
-        memory_handle: &'static ME,
+        database_handle: Arc<D>,
+        memory_handle: Arc<ME>,
     ) -> Self {
         let (sender, receiver) = mpsc::channel();
 
@@ -78,8 +78,8 @@ where
             recv: receiver,
             sender: sender.clone(),
             max_workers,
-            database: database_handle,
-            memory: memory_handle,
+            database: database_handle.clone(),
+            memory: memory_handle.clone(),
             task_actions: task_actions.clone(),
         };
 

@@ -8,7 +8,7 @@ use crate::{
     },
 };
 
-impl<'a, D, ME> RunnableInfo<'a, D, ME>
+impl<D, ME> RunnableInfo<D, ME>
 where
     D: DatabaseStrategy,
     ME: MemoryStrategy,
@@ -17,12 +17,12 @@ where
         &self.logger
     }
 
-    pub fn get_database(&self) -> &D {
-        self.database_handle
+    pub fn get_database(&self) -> Arc<D> {
+        self.database_handle.clone()
     }
 
-    pub fn get_memory(&self) -> &ME {
-        self.memory_handle
+    pub fn get_memory(&self) -> Arc<ME> {
+        self.memory_handle.clone()
     }
 
     pub fn get_task_actions(&self) -> &Arc<TaskActions<D, ME>> {

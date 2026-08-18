@@ -6,7 +6,7 @@ use crate::{
     },
 };
 
-impl<'a, D, ME> TaskHandler<'a, D, ME>
+impl<D, ME> TaskHandler<D, ME>
 where
     D: DatabaseStrategy,
     ME: MemoryStrategy + 'static,

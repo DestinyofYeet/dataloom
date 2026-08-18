@@ -5,19 +5,18 @@ use crate::{
     tasks::{logstrategy::LogStrategy, taskhandler::TaskHandler},
 };
 
-pub struct DataloomServer<'a, D, ME>
+pub struct DataloomServer<D, ME>
 where
     D: DatabaseStrategy,
     ME: MemoryStrategy,
-    Self: 'a,
 {
-    task_handler: TaskHandler<'a, D, ME>,
-    database_strategy: &'a D,
-    memory_strategy: &'a ME,
+    task_handler: TaskHandler<D, ME>,
+    database_strategy: Arc<D>,
+    memory_strategy: Arc<ME>,
     has_shutdown: bool,
 }
 
-impl<'a, D, ME> DataloomServer<'a, D, ME>
+impl<D, ME> DataloomServer<D, ME>
 where
     D: DatabaseStrategy + 'static,
     ME: MemoryStrategy + 'static,
@@ -28,25 +27,30 @@ where
         database_strategy: D,
         memory_strategy: ME,
     ) -> Result<Self, ServerError> {
-        let db = Box::leak(Box::new(database_strategy));
-        let mem = Box::leak(Box::new(memory_strategy));
+        let db = Arc::new(database_strategy);
+        let mem = Arc::new(memory_strategy);
         Ok(Self {
-            task_handler: TaskHandler::new(workers, Arc::new(logging_strategy), db, mem),
-            database_strategy: db,
+            task_handler: TaskHandler::new(
+                workers,
+                Arc::new(logging_strategy),
+                db.clone(),
+                mem.clone(),
+            ),
+            database_strategy: db.clone(),
             has_shutdown: false,
-            memory_strategy: mem,
+            memory_strategy: mem.clone(),
         })
     }
 
-    pub fn get_database(&self) -> &'a D {
-        self.database_strategy
+    pub fn get_database(&self) -> Arc<D> {
+        self.database_strategy.clone()
     }
 
-    pub fn get_memory(&self) -> &'a ME {
-        self.memory_strategy
+    pub fn get_memory(&self) -> Arc<ME> {
+        self.memory_strategy.clone()
     }
 
-    pub fn get_task_handler(&'a self) -> &'a TaskHandler<'a, D, ME> {
+    pub fn get_task_handler(&self) -> &TaskHandler<D, ME> {
         &self.task_handler
     }
 

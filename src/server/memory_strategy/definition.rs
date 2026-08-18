@@ -3,20 +3,20 @@ use serde::{Deserialize, Serialize, de::DeserializeOwned};
 use crate::server::memory_strategy::MemoryError;
 
 pub trait MemoryStrategy: Send + Sync {
-    fn store_key<T>(&'static self, key: &str, item: &T) -> Result<(), MemoryError>
+    fn store_key<T>(&self, key: &str, item: &T) -> Result<(), MemoryError>
     where
         T: Serialize + std::fmt::Debug;
 
-    fn retrieve_key<T>(&'static self, key: &str) -> Result<Option<T>, MemoryError>
+    fn retrieve_key<T>(&self, key: &str) -> Result<Option<T>, MemoryError>
     where
         T: DeserializeOwned + std::fmt::Debug;
 
-    fn modify_key<'a, T, F, RES>(&'static self, key: &str, func: F) -> Result<RES, MemoryError>
+    fn modify_key<'a, T, F, RES>(&self, key: &str, func: F) -> Result<RES, MemoryError>
     where
         T: Deserialize<'a> + std::fmt::Debug + Serialize,
         F: FnOnce(Option<&mut T>) -> RES;
 
-    fn store<T>(&'static self, item: &T) -> Result<(), MemoryError>
+    fn store<T>(&self, item: &T) -> Result<(), MemoryError>
     where
         T: Serialize + std::fmt::Debug,
     {
@@ -25,7 +25,7 @@ pub trait MemoryStrategy: Send + Sync {
         self.store_key(key, &item)
     }
 
-    fn retrieve<T>(&'static self) -> Result<Option<T>, MemoryError>
+    fn retrieve<T>(&self) -> Result<Option<T>, MemoryError>
     where
         T: DeserializeOwned + std::fmt::Debug,
     {
@@ -34,7 +34,7 @@ pub trait MemoryStrategy: Send + Sync {
         self.retrieve_key(key)
     }
 
-    fn modify<'a, T, F, RES>(&'static self, func: F) -> Result<RES, MemoryError>
+    fn modify<'a, T, F, RES>(&self, func: F) -> Result<RES, MemoryError>
     where
         T: Deserialize<'a> + std::fmt::Debug + Serialize,
         F: FnOnce(Option<&mut T>) -> RES,

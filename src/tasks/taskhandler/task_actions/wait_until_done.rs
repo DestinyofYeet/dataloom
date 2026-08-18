@@ -14,7 +14,7 @@ use crate::{
 impl<D, ME> TaskActions<D, ME>
 where
     D: DatabaseStrategy,
-    ME: MemoryStrategy + 'static,
+    ME: MemoryStrategy,
 {
     pub fn wait_until_done<T>(&self, task: &TaskRef<T, D, ME>) -> Result<(), TaskHandlerError> {
         let (tx, rx) = channel();

@@ -5,7 +5,7 @@ use crate::server::memory_strategy::{
 };
 
 impl MemoryStrategy for LocalMemory {
-    fn store_key<T>(&'static self, key: &str, item: &T) -> Result<(), MemoryError>
+    fn store_key<T>(&self, key: &str, item: &T) -> Result<(), MemoryError>
     where
         T: serde::Serialize + std::fmt::Debug,
     {
@@ -23,7 +23,7 @@ impl MemoryStrategy for LocalMemory {
     }
 
     fn retrieve_key<T>(
-        &'static self,
+        &self,
         key: &str,
     ) -> Result<Option<T>, crate::server::memory_strategy::MemoryError>
     where
@@ -48,7 +48,7 @@ impl MemoryStrategy for LocalMemory {
     }
 
     // If you have a safe implementation, please make a pr
-    fn modify_key<'a, T, F, RES>(&'static self, key: &str, func: F) -> Result<RES, MemoryError>
+    fn modify_key<'a, T, F, RES>(&self, key: &str, func: F) -> Result<RES, MemoryError>
     where
         T: serde::Deserialize<'a> + std::fmt::Debug + Serialize,
         F: FnOnce(Option<&mut T>) -> RES,
@@ -61,11 +61,11 @@ impl MemoryStrategy for LocalMemory {
         match map.remove_entry(key) {
             // SAFETY: In my head this should be fine.
             //
-            // We leak `value` to the stack so serde is happy with a static lifetime.
+            // We leak `value` to the stack so serde is happy with alifetime.
             // We do work in func()
             // We re-encode the modified value back to json.
             // We save the json back to the map.
-            // We take the static pointer and cast it back to a box and drop it
+            // We take thepointer and cast it back to a box and drop it
             // Since `item` is not referenced after `value` is dropped, no memory corruption should occur.
             //
             // This could technically break if in func(), the user returns the `&mut` pointer out as `RET`, but I think the rust borrowchecker should catch that.
