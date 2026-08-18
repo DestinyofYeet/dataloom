@@ -1,5 +1,9 @@
 use std::path::PathBuf;
 
+pub mod memory;
+mod test_model;
+pub use test_model::*;
+
 use crate::{
     server::{
         DataloomServer,
@@ -25,7 +29,7 @@ where
     DataloomServer::new(1, TracingStrategy {}, strategy, memory).expect("to create server")
 }
 
-pub fn setup_sqlite_server() -> DataloomServer<SqliteStrategy, LocalMemory> {
+pub fn setup_test_server() -> DataloomServer<SqliteStrategy, LocalMemory> {
     let dir = get_test_dir();
     setup_server(
         SqliteStrategy::new(dir.join("database.db").to_str().unwrap()),

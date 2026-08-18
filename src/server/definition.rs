@@ -37,11 +37,17 @@ where
         })
     }
 
-    pub fn get_database(&self) -> &D {
+    pub fn get_database<'a>(&self) -> &'a D
+    where
+        Self: 'a,
+    {
         self.database_strategy
     }
 
-    pub fn get_memory(&self) -> &ME {
+    pub fn get_memory<'a>(&self) -> &'a ME
+    where
+        Self: 'a,
+    {
         self.memory_strategy
     }
 

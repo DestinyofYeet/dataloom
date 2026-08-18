@@ -11,14 +11,10 @@ pub trait MemoryStrategy: Send + Sync {
     where
         T: DeserializeOwned + std::fmt::Debug;
 
-    fn modify_key_mut<'a, T, F, RES>(
-        &'static self,
-        key: &str,
-        func: F,
-    ) -> Result<Option<RES>, MemoryError>
+    fn modify_key<'a, T, F, RES>(&'static self, key: &str, func: F) -> Result<RES, MemoryError>
     where
         T: Deserialize<'a> + std::fmt::Debug + Serialize,
-        F: FnOnce(&mut T) -> RES;
+        F: FnOnce(Option<&mut T>) -> RES;
 
     fn store<T>(&'static self, item: &T) -> Result<(), MemoryError>
     where
@@ -36,5 +32,14 @@ pub trait MemoryStrategy: Send + Sync {
         let key = std::any::type_name::<T>();
 
         self.retrieve_key(key)
+    }
+
+    fn modify<'a, T, F, RES>(&'static self, func: F) -> Result<RES, MemoryError>
+    where
+        T: Deserialize<'a> + std::fmt::Debug + Serialize,
+        F: FnOnce(Option<&mut T>) -> RES,
+    {
+        let key = std::any::type_name::<T>();
+        self.modify_key(key, func)
     }
 }

@@ -1,93 +1,18 @@
 use crate::{
-    self as dataloom,
-    models::{
-        MigrationKind, ModelMigration,
-        column::{
-            ColumnType,
-            create::{CreateColumn, CreateOptions},
-        },
-        search::SearchQuery,
-        traits::model::Model,
-    },
+    models::search::SearchQuery,
     server::database_strategy::DatabaseStrategy,
     tasks::{
         default_tasks::database::{GetModelTask, SaveModelTask},
         task::TaskState,
     },
-    tests::setup_sqlite_server,
+    tests::{TestData, TestModel, setup_test_server},
 };
 
-use std::sync::LazyLock;
-
-use chrono::{DateTime, Utc};
-use dataloom_macro::{FromIter, SaveData};
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize, Debug)]
-pub enum Data {
-    One(String),
-    Two,
-}
-
-#[derive(Debug, SaveData, FromIter)]
-pub struct TestModel {
-    id: Option<i64>,
-    name: String,
-    created_at: DateTime<Utc>,
-    extra_data: Data,
-}
-
-impl Model for TestModel {
-    const TABLE_NAME: &'static str = "TestModel";
-
-    fn get_migration() -> &'static Vec<crate::models::ModelMigration> {
-        static MIGRATIONS: LazyLock<Vec<ModelMigration>> = LazyLock::new(|| {
-            vec![ModelMigration::new(
-                0,
-                MigrationKind::Create(vec![
-                    CreateColumn::new(
-                        "id",
-                        ColumnType::Integer,
-                        CreateOptions::default().set_primary_key(),
-                    ),
-                    CreateColumn::new(
-                        "name",
-                        ColumnType::String,
-                        CreateOptions::default().set_non_nullable(),
-                    ),
-                    CreateColumn::new(
-                        "created_at",
-                        ColumnType::Date,
-                        CreateOptions::default().set_non_nullable(),
-                    ),
-                    CreateColumn::new(
-                        "extra_data",
-                        ColumnType::Json,
-                        CreateOptions::default().set_non_nullable(),
-                    ),
-                ]),
-            )]
-        });
-
-        &MIGRATIONS
-    }
-
-    fn get_id(&self) -> Option<i64> {
-        self.id
-    }
-
-    fn set_id(&mut self, id: i64) {
-        self.id = Some(id)
-    }
-
-    fn get_id_column_name(&self) -> &'static str {
-        "id"
-    }
-}
+use chrono::Utc;
 
 #[test]
 pub fn test_save_and_retrieve() {
-    let mut server = setup_sqlite_server();
+    let mut server = setup_test_server();
     let db = server.get_database();
 
     db.migrate_model::<TestModel>().unwrap();
@@ -96,7 +21,7 @@ pub fn test_save_and_retrieve() {
         id: None,
         name: "some_name".to_string(),
         created_at: Utc::now(),
-        extra_data: Data::One("weeee".to_string()),
+        extra_data: TestData::One("weeee".to_string()),
     };
 
     db.save_model(&db.get_connection(), &mut model).unwrap();
@@ -113,7 +38,7 @@ pub fn test_save_and_retrieve() {
 
 #[test]
 pub fn test_save_and_retrieve_task() {
-    let mut server = setup_sqlite_server();
+    let mut server = setup_test_server();
     let task_handler = server.get_task_handler();
     let db = server.get_database();
 
@@ -123,7 +48,7 @@ pub fn test_save_and_retrieve_task() {
         id: None,
         name: "some_name".to_string(),
         created_at: Utc::now(),
-        extra_data: Data::One("weeee".to_string()),
+        extra_data: TestData::One("weeee".to_string()),
     };
 
     let save_task = SaveModelTask::new(model);

@@ -9,7 +9,7 @@ use crate as dataloom;
 use crate::models::column::ColumnType;
 use crate::models::{MigrationKind, ModelMigration};
 
-use crate::{models::traits::model::Model, tests::setup_sqlite_server};
+use crate::{models::traits::model::Model, tests::setup_test_server};
 
 #[derive(FromIter, SaveData, Debug, PartialEq)]
 pub struct MyStruct {
@@ -66,7 +66,7 @@ impl Model for MyStruct {
 
 #[test]
 pub fn readme_example() {
-    let server = setup_sqlite_server();
+    let server = setup_test_server();
     let db = server.get_database();
     db.migrate_model::<MyStruct>().unwrap();
 

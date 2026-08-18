@@ -47,14 +47,11 @@ impl MemoryStrategy for LocalMemory {
         Ok(result)
     }
 
-    fn modify_key_mut<'a, T, F, RES>(
-        &'static self,
-        key: &str,
-        func: F,
-    ) -> Result<Option<RES>, MemoryError>
+    // If you have a safe implementation, please make a pr
+    fn modify_key<'a, T, F, RES>(&'static self, key: &str, func: F) -> Result<RES, MemoryError>
     where
         T: serde::Deserialize<'a> + std::fmt::Debug + Serialize,
-        F: FnOnce(&mut T) -> RES,
+        F: FnOnce(Option<&mut T>) -> RES,
     {
         let mut map = self
             .storage
@@ -69,27 +66,30 @@ impl MemoryStrategy for LocalMemory {
             // We re-encode the modified value back to json.
             // We save the json back to the map.
             // We take the static pointer and cast it back to a box and drop it
+            // Since `item` is not referenced after `value` is dropped, no memory corruption should occur.
             //
             // This could technically break if in func(), the user returns the `&mut` pointer out as `RET`, but I think the rust borrowchecker should catch that.
             Some((key, value)) => unsafe {
-                let mut value: &'static str = Box::leak(Box::new(value));
+                let value: *const String = &mut *(Box::new(value));
 
-                let mut item: T = serde_json::from_str(value)
+                let mut item: T = serde_json::from_str(&*value)
                     .map_err(|e| MemoryError::Retrieve(e.to_string()))?;
 
-                let result = func(&mut item);
+                let result = func(Some(&mut item));
 
                 let json = serde_json::to_string(&item)
                     .map_err(|e| MemoryError::Storage(e.to_string()))?;
 
                 map.insert(key, json);
 
-                drop(Box::from_raw(&mut value));
+                // Crashes if this is called.
+                // _ = Box::from_raw(&mut value);
+                // I think value is implicitely freed when `item` is dropped
 
-                Ok(Some(result))
+                Ok(result)
             },
 
-            None => Ok(None),
+            None => Ok(func(None)),
         }
     }
 }
