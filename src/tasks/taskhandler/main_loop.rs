@@ -30,7 +30,7 @@ where
     pub(super) task_actions: Arc<TaskActions<D, ME>>,
 }
 
-impl<D, ME> TaskHandler<D, ME>
+impl<'a, D, ME> TaskHandler<'a, D, ME>
 where
     D: DatabaseStrategy + 'static,
     ME: MemoryStrategy + 'static,

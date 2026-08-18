@@ -5,18 +5,19 @@ use crate::{
     tasks::{logstrategy::LogStrategy, taskhandler::TaskHandler},
 };
 
-pub struct DataloomServer<D, ME>
+pub struct DataloomServer<'a, D, ME>
 where
-    D: DatabaseStrategy + 'static,
-    ME: MemoryStrategy + 'static,
+    D: DatabaseStrategy,
+    ME: MemoryStrategy,
+    Self: 'a,
 {
-    task_handler: TaskHandler<D, ME>,
-    database_strategy: &'static D,
-    memory_strategy: &'static ME,
+    task_handler: TaskHandler<'a, D, ME>,
+    database_strategy: &'a D,
+    memory_strategy: &'a ME,
     has_shutdown: bool,
 }
 
-impl<D, ME> DataloomServer<D, ME>
+impl<'a, D, ME> DataloomServer<'a, D, ME>
 where
     D: DatabaseStrategy + 'static,
     ME: MemoryStrategy + 'static,
@@ -37,21 +38,15 @@ where
         })
     }
 
-    pub fn get_database<'a>(&self) -> &'a D
-    where
-        Self: 'a,
-    {
+    pub fn get_database(&self) -> &'a D {
         self.database_strategy
     }
 
-    pub fn get_memory<'a>(&self) -> &'a ME
-    where
-        Self: 'a,
-    {
+    pub fn get_memory(&self) -> &'a ME {
         self.memory_strategy
     }
 
-    pub fn get_task_handler(&self) -> &TaskHandler<D, ME> {
+    pub fn get_task_handler(&'a self) -> &'a TaskHandler<'a, D, ME> {
         &self.task_handler
     }
 

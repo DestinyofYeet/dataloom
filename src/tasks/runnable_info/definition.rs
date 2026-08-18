@@ -8,7 +8,7 @@ use crate::{
 pub struct RunnableInfo<'a, D, ME>
 where
     D: DatabaseStrategy,
-    ME: MemoryStrategy + 'static,
+    ME: MemoryStrategy,
 {
     pub(super) logger: WorkerLogger,
     pub(super) database_handle: &'a D,

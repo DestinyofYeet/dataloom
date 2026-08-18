@@ -42,10 +42,10 @@ pub enum TaskSubscriberEvent {
 }
 
 #[allow(dead_code)]
-pub struct TaskHandler<D, ME>
+pub struct TaskHandler<'a, D, ME>
 where
-    D: DatabaseStrategy + 'static,
-    ME: MemoryStrategy + 'static,
+    D: DatabaseStrategy,
+    ME: MemoryStrategy,
 {
     pub(super) log_strategy: LogStrategyType,
     pub(super) max_workers: u64,
@@ -55,11 +55,11 @@ where
     pub(super) task_actions: Arc<TaskActions<D, ME>>,
 
     pub(super) handle: Option<JoinHandle<()>>,
-    pub(super) database_handle: &'static D,
-    pub(super) memory_handle: &'static ME,
+    pub(super) database_handle: &'a D,
+    pub(super) memory_handle: &'a ME,
 }
 
-impl<D, ME> TaskHandler<D, ME>
+impl<'a, D, ME> TaskHandler<'a, D, ME>
 where
     D: DatabaseStrategy + 'static,
     ME: MemoryStrategy + 'static,

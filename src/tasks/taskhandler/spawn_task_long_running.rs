@@ -9,10 +9,10 @@ use crate::{
     },
 };
 
-impl<D, ME> TaskHandler<D, ME>
+impl<'a, D, ME> TaskHandler<'a, D, ME>
 where
     D: DatabaseStrategy,
-    ME: MemoryStrategy,
+    ME: MemoryStrategy + 'static,
 {
     pub fn spawn_task_long_running<T>(
         &self,

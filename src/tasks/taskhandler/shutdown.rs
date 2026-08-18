@@ -3,7 +3,7 @@ use crate::{
     tasks::taskhandler::{TaskEvent, TaskHandler, TaskHandlerError},
 };
 
-impl<D, M> TaskHandler<D, M>
+impl<'a, D, M> TaskHandler<'a, D, M>
 where
     D: DatabaseStrategy,
     M: MemoryStrategy,

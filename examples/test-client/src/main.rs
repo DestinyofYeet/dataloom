@@ -77,7 +77,7 @@ pub struct LongTask {
 impl<D, ME> TaskRunnable<D, ME> for LongTask
 where
     D: DatabaseStrategy,
-    ME: MemoryStrategy,
+    ME: MemoryStrategy + 'static,
 {
     fn run(&mut self, info: RunnableInfo<D, ME>) -> Box<dyn Any + Send + Sync> {
         let logger = info.get_logger();
