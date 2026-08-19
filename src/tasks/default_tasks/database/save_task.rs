@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use crate::{
-    models::traits::{
+    core::traits::{
         from_iter::FromIter,
         model::Model,
         save_data::{SaveData, ValidateSaveData},

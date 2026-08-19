@@ -1,7 +1,7 @@
 use std::{any::Any, marker::PhantomData};
 
 use crate::{
-    models::{
+    core::{
         search::SearchQuery,
         traits::{from_iter::FromIter, model::Model},
     },

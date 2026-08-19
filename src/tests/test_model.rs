@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::{
     self as dataloom,
-    models::{
+    core::{
         MigrationKind, ModelMigration,
         column::{
             ColumnType,
@@ -16,13 +16,13 @@ use crate::{
     },
 };
 
-#[derive(Serialize, Deserialize, Debug, PartialEq)]
+#[derive(Serialize, Clone, Deserialize, Debug, PartialEq)]
 pub enum TestData {
     One(String),
     Two,
 }
 
-#[derive(Debug, SaveData, FromIter, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, SaveData, FromIter, Serialize, Deserialize, PartialEq)]
 pub struct TestModel {
     pub id: Option<i64>,
     pub name: String,
@@ -33,7 +33,7 @@ pub struct TestModel {
 impl Model for TestModel {
     const TABLE_NAME: &'static str = "TestModel";
 
-    fn get_migration() -> &'static Vec<crate::models::ModelMigration> {
+    fn get_migration() -> &'static Vec<crate::core::ModelMigration> {
         static MIGRATIONS: LazyLock<Vec<ModelMigration>> = LazyLock::new(|| {
             vec![ModelMigration::new(
                 0,

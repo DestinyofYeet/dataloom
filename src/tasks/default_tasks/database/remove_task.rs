@@ -1,7 +1,7 @@
 use std::{any::Any, marker::PhantomData};
 
 use crate::{
-    models::{search::SearchQuery, traits::model::Model},
+    core::{search::SearchQuery, traits::model::Model},
     server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
     tasks::{runnable_info::RunnableInfo, taskrunnable::TaskRunnable},
 };
@@ -35,6 +35,6 @@ where
     fn run(&mut self, info: RunnableInfo<D, ME>) -> Box<dyn Any + Send + Sync> {
         let db = info.get_database();
         let conn = db.get_connection();
-        Box::new(db.remove_model::<MO>(&conn, &self.search))
+        Box::new(db.remove_model::<MO>(&conn, self.search.clone()))
     }
 }

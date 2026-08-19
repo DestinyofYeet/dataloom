@@ -1,7 +1,12 @@
-use crate::models::column::ModifyColumnOptionsValues;
-use crate::models::column::create::CreateColumnOptionsValues;
-use crate::models::column::create::CreateOptions;
-use crate::models::column::create::CreateTableOptionValues;
+use crate::core::column::ModifyColumnOptionsValues;
+use crate::core::column::create::CreateColumnOptionsValues;
+use crate::core::column::create::CreateOptions;
+use crate::core::column::create::CreateTableOptionValues;
+use crate::core::search::constraint::OtherConstraint;
+use crate::core::search::constraint::SearchConstraint;
+use crate::core::search::search_op::SearchOp;
+use crate::core::search::table_options::table_options_value::TableOptionsValue;
+use crate::core::search::table_options::table_options_value::order_by_options::OrderByOptions;
 use std::{
     any::{type_name, type_name_of_val},
     collections::HashSet,
@@ -11,15 +16,16 @@ use itertools::Itertools;
 use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Connection, Transaction, params, params_from_iter};
+use tracing::warn;
 use tracing::{debug, error, info, trace};
 
 use roxygen::roxygen;
 
 use crate::{
-    models::{
+    core::{
         MigrationKind,
         column::{ColumnType, ColumnValue},
-        search::{SearchOptions, SearchOrderByOptions, SearchQuery, SearchSelectOptions},
+        search::SearchQuery,
         traits::{
             from_iter::{FromIter, FromIterValue},
             model::Model,
@@ -97,7 +103,7 @@ impl SqliteStrategy {
     }
 
     fn match_modify_column_options(
-        value: &crate::models::column::ModifyColumnOptionsValues,
+        value: &crate::core::column::ModifyColumnOptionsValues,
         column_name: &str,
     ) -> String {
         let mut out = String::new();
@@ -151,6 +157,59 @@ impl SqliteStrategy {
         }
 
         options.join(",\n")
+    }
+
+    fn parse_constraints<T>(input: Option<SearchConstraint>) -> (String, Vec<ColumnValue>)
+    where
+        T: Model,
+    {
+        let mut output = String::new();
+        let mut iterations = 0;
+        let mut values: Vec<ColumnValue> = Vec::new();
+
+        let mut next = input;
+
+        while let Some(value) = next {
+            iterations += 1;
+            let (column, operator, value, other) = value.get();
+            let column = T::get_latest_column_name(&column).unwrap();
+
+            values.push(value);
+
+            output += &format!(
+                "{column} {} ?{}",
+                match operator {
+                    SearchOp::EQ => "=",
+                    SearchOp::NEQ => "!=",
+                    SearchOp::GT => ">",
+                    SearchOp::GTEQ => ">=",
+                    SearchOp::LT => "<",
+                    SearchOp::LTEQ => "<=",
+                },
+                iterations
+            );
+
+            if iterations % 2 == 0 {
+                output = format!("({output})");
+            }
+
+            if let Some(other) = other {
+                next = match *other {
+                    OtherConstraint::And(search_constraint) => {
+                        output += " AND ";
+                        Some(search_constraint)
+                    }
+                    OtherConstraint::Or(search_constraint) => {
+                        output += " OR  ";
+                        Some(search_constraint)
+                    }
+                };
+            } else {
+                next = None;
+            }
+        }
+
+        (output, values)
     }
 }
 
@@ -362,7 +421,7 @@ impl DatabaseStrategy for SqliteStrategy {
         T: SaveData + Model + FromIter + ValidateSaveData,
     {
         let data = model.get_save_data();
-        let table_name = model.self_get_table_name();
+        let table_name = T::TABLE_NAME;
 
         let model_name = type_name_of_val(model);
 
@@ -458,13 +517,16 @@ impl DatabaseStrategy for SqliteStrategy {
     fn search_single_model<T>(
         &self,
         conn: &Self::FunctionConnType<'_>,
-        query: SearchQuery,
+        mut query: SearchQuery,
     ) -> Result<Option<T>, DatabaseStrategyError>
     where
         T: Model + FromIter,
         Self: Sized,
     {
-        let mut models = self.search_multiple_model(conn, query.set_limit(1))?;
+        unsafe {
+            query.set_limit(1);
+        }
+        let mut models = self.search_multiple_model(conn, query)?;
 
         if !models.is_empty() {
             return Ok(Some(models.remove(0)));
@@ -484,79 +546,50 @@ impl DatabaseStrategy for SqliteStrategy {
         let mut sql = String::new();
         let table_name = T::TABLE_NAME;
 
-        let select_string = {
-            let mut sql = String::new();
+        let (constraints, table_options) = query.values();
 
-            for (_, options) in query.select_options.iter().sorted_by_key(|(key, _)| key) {
-                match options {
-                    SearchSelectOptions::Min => sql = format!("MIN({sql})"),
-                    SearchSelectOptions::Max => sql = format!("MAX({sql})"),
-                    SearchSelectOptions::Columns(items) => sql += &items.join(", "),
-                }
-            }
+        sql += &format!("SELECT * FROM {table_name}");
 
-            if sql.is_empty() {
-                sql = String::from("*");
-            }
-
-            sql
-        };
-
-        sql += &format!("SELECT {select_string} FROM {table_name}");
-
-        let constraints = query
-            .constraints
-            .iter()
-            .map(|constraint| {
-                (
-                    constraint,
-                    T::get_latest_column_name(&constraint.column).unwrap(),
-                )
-            })
-            .enumerate()
-            .map(|(count, (constraint, column))| {
-                format!(
-                    "{} {} (?{})",
-                    column,
-                    constraint.operator.to_string(),
-                    count + 1
-                )
-            })
-            .join(" AND ");
+        let (constraints, values) = Self::parse_constraints::<T>(constraints);
 
         if !constraints.is_empty() {
-            sql += &format!(" WHERE {constraints}")
+            sql += &format!(" WHERE {constraints}");
         }
 
-        for (_, options) in query.post_options.iter().sorted_by_key(|(ord, _)| ord) {
-            match options {
-                SearchOptions::Limit(limit) => sql += &format!(" LIMIT {limit}"),
-                SearchOptions::OrderBy(value) => {
-                    sql += &format!(" {} ", "Order by");
-                    sql += &value
-                        .iter()
-                        .map(|(column, option)| {
-                            let mut string = T::get_latest_column_name(column).unwrap();
-                            if let Some(option) = option {
-                                let option = match option {
-                                    SearchOrderByOptions::Asc => "ASC",
-                                    SearchOrderByOptions::Desc => "DESC",
-                                };
+        if let Some(table_options) = table_options {
+            let table_options = table_options.values();
 
-                                string += &format!(" {option}");
+            for option in table_options
+                .into_iter()
+                .sorted_by_key(|item| item.priority())
+            {
+                match option {
+                    TableOptionsValue::Limit(limit) => {
+                        sql += &format!(" LIMIT {limit}");
+                    }
+                    TableOptionsValue::OrderBy { column, options } => {
+                        let column = T::get_latest_column_name(&column).unwrap();
+
+                        sql += &format!(
+                            " Order by {column} {}",
+                            match options {
+                                Some(value) => {
+                                    match value {
+                                        OrderByOptions::Asc => "ASC",
+                                        OrderByOptions::Desc => "DESC",
+                                    }
+                                }
+                                None => "",
                             }
-
-                            string
-                        })
-                        .join(",")
+                        )
+                    }
                 }
             }
         }
 
-        let params = query
-            .constraints
+        let params = values
             .into_iter()
-            .map(|e| Self::match_column_value(&e.value))
+            .map(|e| Self::match_column_value(&e))
             .collect_vec();
 
         trace!("Generated sql: {sql} | params: {:?}", &params);
@@ -582,7 +615,9 @@ impl DatabaseStrategy for SqliteStrategy {
                     };
 
                     let value = match value {
-                        Ok(value) => value,
+                        Ok(value) => {
+                            value
+                        },
                         Err(e) => {
                             error!(
                                 "Expected Column {column} with type {column_type:?} on Model {}, error: {e:?}",
@@ -597,16 +632,17 @@ impl DatabaseStrategy for SqliteStrategy {
                         column_value: value,
                         column_type: *column_type
                     })
-
-
                 });
 
                 match iter.clone().all(|value| value.is_some()) {
                     true => {
-                        Ok(T::from_iter(iter.map(|value| value.unwrap())))
+                        let value = T::from_iter(iter.map(|value| value.unwrap()));
+
+                        debug!("Got to parse value| is_some: {}", value.is_some());
+                        Ok(value)
                     },
                     false => {
-                        trace!("Failed to test for all Some() values");
+                        warn!("Failed to test for all Some() values");
                         Ok(None)
                     }
                 }
@@ -614,24 +650,30 @@ impl DatabaseStrategy for SqliteStrategy {
             })
             .map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
 
+        let mut rows_ret: u64 = 0;
+
         let models = {
             let mut models = Vec::new();
             for row in rows {
+                rows_ret += 1;
                 let row = row.map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
                 match row {
                     Some(value) => {
                         models.push(value);
                     }
                     None => {
-                        models = Vec::new();
-                        break;
+                        trace!("Something was none");
                     }
                 }
             }
             models
         };
 
-        trace!("Found {} results", models.len());
+        trace!(
+            "Database returned {} rows, {} parsed models",
+            rows_ret,
+            models.len()
+        );
 
         Ok(models)
     }
@@ -639,7 +681,7 @@ impl DatabaseStrategy for SqliteStrategy {
     fn remove_model<T: Model>(
         &self,
         conn: &Self::FunctionConnType<'_>,
-        query: &SearchQuery,
+        query: SearchQuery,
     ) -> Result<(), DatabaseStrategyError> {
         let table_name = T::TABLE_NAME;
 
@@ -647,13 +689,9 @@ impl DatabaseStrategy for SqliteStrategy {
 
         sql += &format!("DELETE FROM {table_name}");
 
-        let constraints = query
-            .constraints
-            .iter()
-            .enumerate()
-            .map(|(count, column)| (count, T::get_latest_column_name(&column.column).unwrap()))
-            .map(|(count, column)| format!("{} = (?{})", column, count + 1))
-            .join(" AND ");
+        let (constraints, _) = query.values();
+
+        let (constraints, values) = Self::parse_constraints::<T>(constraints);
 
         if !constraints.is_empty() {
             sql += &format!(" WHERE {constraints}")
@@ -661,10 +699,9 @@ impl DatabaseStrategy for SqliteStrategy {
 
         trace!("Generated sql: {sql}");
 
-        let params = query
-            .constraints
-            .iter()
-            .map(|e| Self::match_column_value(&e.value))
+        let params = values
+            .into_iter()
+            .map(|e| Self::match_column_value(&e))
             .collect_vec();
 
         conn.execute(&sql, params_from_iter(params))

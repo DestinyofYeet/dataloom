@@ -1,13 +1,13 @@
 use std::sync::LazyLock;
 
+use dataloom::core::column::create::{CreateColumn, CreateOptions};
+use dataloom::core::search::SearchQuery;
+use dataloom::core::traits::save_data::SaveData;
+use dataloom::core::{MigrationKind, ModelMigration};
 use dataloom::dataloom_macro::{FromIter, SaveData};
-use dataloom::models::column::create::{CreateColumn, CreateOptions};
-use dataloom::models::search::SearchQuery;
-use dataloom::models::traits::save_data::SaveData;
-use dataloom::models::{MigrationKind, ModelMigration};
 use dataloom::server::memory_strategy::default_strategies::local_storage::LocalMemory;
 use dataloom::{
-    models::{column::ColumnType, traits::model::Model},
+    core::{column::ColumnType, traits::model::Model},
     server::{
         DataloomServer,
         database_strategy::{DatabaseStrategy, default_strategies::SqliteStrategy},
@@ -168,7 +168,7 @@ fn main() {
     let model = db
         .search_single_model::<Test>(
             &db.get_connection(),
-            SearchQuery::empty().add_constraint(("id", 1)),
+            SearchQuery::builder().add_constraint(("id", 1)).build(),
         )
         .unwrap()
         .unwrap();

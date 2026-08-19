@@ -1,8 +1,7 @@
 use chrono::{DateTime, Local, Utc};
 use clap::Parser;
 use dataloom::{
-    dataloom_macro::{FromIter, SaveData},
-    models::{
+    core::{
         MigrationKind, ModelMigration,
         column::{
             ColumnType, ColumnValue,
@@ -11,6 +10,7 @@ use dataloom::{
         search::SearchQuery,
         traits::model::Model,
     },
+    dataloom_macro::{FromIter, SaveData},
     server::{
         DataloomServer,
         database_strategy::{
@@ -279,7 +279,9 @@ fn main() -> Result<(), anyhow::Error> {
 
     if let Some(found_group) = db.search_single_model::<Group>(
         &conn,
-        SearchQuery::empty().add_constraint(("name", &group.name)),
+        SearchQuery::builder()
+            .add_constraint(("name", &group.name))
+            .build(),
     )? {
         group = found_group;
     } else {
@@ -299,7 +301,9 @@ fn main() -> Result<(), anyhow::Error> {
     let mut user = db
         .search_single_model::<User>(
             &conn,
-            SearchQuery::empty().add_constraint(("id", ColumnValue::Integer(user.id.unwrap()))),
+            SearchQuery::builder()
+                .add_constraint(("id", ColumnValue::Integer(user.id.unwrap())))
+                .build(),
         )?
         .unwrap();
 
@@ -315,7 +319,9 @@ fn main() -> Result<(), anyhow::Error> {
     let _task = task_handler.spawn_task(save_task);
     db.remove_model::<User>(
         &conn,
-        &SearchQuery::empty().add_constraint(("username", "roflrofl")),
+        SearchQuery::builder()
+            .add_constraint(("username", "roflrofl"))
+            .build(),
     )?;
 
     drop(conn);

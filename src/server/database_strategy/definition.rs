@@ -1,12 +1,12 @@
-use crate::models::traits::from_iter::FromIter;
-use crate::models::traits::model::Model;
-use crate::models::traits::save_data::SaveData;
-use crate::models::traits::save_data::ValidateSaveData;
+use crate::core::traits::from_iter::FromIter;
+use crate::core::traits::model::Model;
+use crate::core::traits::save_data::SaveData;
+use crate::core::traits::save_data::ValidateSaveData;
 use std::ops::Deref;
 
 use thiserror::Error;
 
-use crate::models::search::SearchQuery;
+use crate::core::search::SearchQuery;
 
 pub enum TransactionOptions {
     Commit,
@@ -119,7 +119,7 @@ pub trait DatabaseStrategy: Send + Sync {
     fn remove_model<T: Model>(
         &self,
         conn: &Self::FunctionConnType<'_>,
-        query: &SearchQuery,
+        query: SearchQuery,
     ) -> Result<(), DatabaseStrategyError>;
 
     /// This function should manage a transaction connection type.
