@@ -116,7 +116,7 @@ pub fn other_example() {
                 .add_constraint(SearchConstraint::new(
                     "id",
                     SearchOp::EQ,
-                    my_struct.id.unwrap().into(),
+                    my_struct.id.unwrap(),
                 ))
                 .build(),
         )

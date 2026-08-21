@@ -143,7 +143,7 @@ pub fn multi_query_test() {
             &conn,
             SearchQuery::builder()
                 .add_constraint(
-                    SearchConstraint::new("name", SearchOp::EQ, "some_name".into()).and(
+                    SearchConstraint::new("name", SearchOp::EQ, "some_name").and(
                         SearchConstraint::new(
                             "extra_data",
                             SearchOp::EQ,

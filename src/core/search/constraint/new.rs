@@ -4,11 +4,15 @@ use crate::core::{
 };
 
 impl SearchConstraint {
-    pub fn new(column: impl Into<String>, operator: SearchOp, value: ColumnValue) -> Self {
+    pub fn new(
+        column: impl Into<String>,
+        operator: SearchOp,
+        value: impl Into<ColumnValue>,
+    ) -> Self {
         Self {
             column: column.into(),
             operator,
-            value,
+            value: value.into(),
             other: None,
         }
     }
