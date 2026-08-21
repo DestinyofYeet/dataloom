@@ -1,7 +1,8 @@
 use std::{
-    collections::HashMap,
+    collections::{HashMap, VecDeque},
+    rc::Rc,
     sync::{
-        Arc,
+        Arc, Mutex,
         mpsc::{Receiver, Sender},
     },
 };
@@ -12,6 +13,7 @@ use uuid::Uuid;
 use crate::{
     server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
     tasks::{
+        task::Task,
         taskhandler::{TaskEvent, TaskHandler, TaskSubscriberEvent, task_actions::TaskActions},
         worker::Worker,
     },
@@ -30,16 +32,20 @@ where
     pub(super) task_actions: Arc<TaskActions<D, ME>>,
 }
 
+pub(super) type WorkerList<D, ME> = Vec<Rc<Worker<D, ME>>>;
+
 impl<D, ME> TaskHandler<D, ME>
 where
     D: DatabaseStrategy + 'static,
     ME: MemoryStrategy + 'static,
 {
     pub(super) fn main_loop(data: MainLoopData<D, ME>) {
-        let mut workers: Vec<Worker<D, ME>> = Vec::with_capacity(data.max_workers as usize);
+        let mut workers: WorkerList<D, ME> = Vec::with_capacity(data.max_workers as usize);
+        let mut task_queue: VecDeque<Arc<Mutex<Task<D, ME>>>> = VecDeque::new();
+        let mut task_worker_map: HashMap<Uuid, Rc<Worker<D, ME>>> = HashMap::new();
 
         for i in 0..data.max_workers {
-            workers.push(
+            workers.push(Rc::new(
                 Worker::new(
                     i,
                     data.sender.clone(),
@@ -47,15 +53,15 @@ where
                     data.database.clone(),
                     data.memory.clone(),
                 )
-                .expect("to) create workers"),
-            );
+                .expect("to create workers"),
+            ));
         }
 
         let mut subscribers = HashMap::<Uuid, Sender<TaskSubscriberEvent>>::new();
 
         let mut long_worker_count: u64 = 0;
 
-        while let Some(command) = data.recv.iter().next() {
+        'mainloop: while let Some(command) = data.recv.iter().next() {
             match command {
                 TaskEvent::Shutdown => {
                     for worker in workers.iter() {
@@ -78,72 +84,30 @@ where
                     break;
                 }
                 TaskEvent::ProcessTask(task) => {
-                    let active_workers: u64 = workers
-                        .iter()
-                        .map(|e| if e.is_running() { 1 } else { 0 })
-                        .sum();
+                    Self::respawn_dead_workers(&data, &mut workers);
 
-                    if active_workers != data.max_workers {
-                        let diff = data.max_workers - active_workers;
+                    for worker in workers.iter() {
+                        if worker.get_task().is_none() {
+                            Self::give_worker_task(task, worker.clone(), &mut task_worker_map);
 
-                        let mut respawn_worker_ids = Vec::with_capacity(diff as usize);
-
-                        for worker in workers.iter() {
-                            if !worker.is_running() {
-                                let id = worker.get_id();
-                                respawn_worker_ids.push(id);
-                                warn!("Worker {id} is not running! It probably crashed.");
-                                if let Some(uuid) = worker.get_task() {
-                                    warn!("Worker {id} had task id {uuid}.");
-                                    match data.sender.send(TaskEvent::TaskDone(uuid)) {
-                                        Ok(_) => {}
-                                        Err(e) => {
-                                            error!(
-                                                "Failed to send done message for crashed worker: {e}"
-                                            );
-                                        }
-                                    }
-                                }
-                            }
-                        }
-
-                        workers.retain(|e| e.is_running());
-
-                        for id in respawn_worker_ids {
-                            match Worker::new(
-                                id,
-                                data.sender.clone(),
-                                data.task_actions.clone(),
-                                data.database.clone(),
-                                data.memory.clone(),
-                            ) {
-                                Ok(value) => {
-                                    warn!("Respawned worker {id}");
-                                    workers.push(value);
-                                }
-                                Err(e) => {
-                                    error!("Failed to respawn worker {id}: {e}");
-                                }
-                            }
+                            continue 'mainloop;
                         }
                     }
 
-                    let random_worker = rand::random_range(0..workers.len());
-                    let worker = &workers[random_worker as usize];
-
-                    match worker.schedule_task(task) {
-                        Ok(_) => {}
-                        Err(e) => {
-                            eprintln!("Failed to schedule task: {e}");
-                        }
-                    }
+                    task_queue.push_back(task);
                 }
+
                 TaskEvent::TaskDone(uuid) => {
                     if let Some(sender) = subscribers.get(&uuid) {
                         match sender.send(TaskSubscriberEvent::TaskDone) {
                             Ok(_) => {}
                             Err(e) => warn!("Failed to send message to subscriber: {e}"),
                         }
+                    }
+
+                    if let Some(task) = task_queue.pop_front() {
+                        let worker = task_worker_map.remove(&uuid).expect("to have a worker");
+                        Self::give_worker_task(task, worker.clone(), &mut task_worker_map);
                     }
                 }
                 TaskEvent::RegisterSubscriber {
