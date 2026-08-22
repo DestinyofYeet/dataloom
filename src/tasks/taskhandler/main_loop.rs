@@ -108,8 +108,8 @@ where
                         }
                     }
 
-                    if let Some(task) = task_queue.pop_front()
-                        && let Some(worker) = task_worker_map.remove(&uuid)
+                    if let Some(worker) = task_worker_map.remove(&uuid)
+                        && let Some(task) = task_queue.pop_front()
                     {
                         Self::give_worker_task(task, worker.clone(), &mut task_worker_map);
                         trace!("queue size: {}", task_queue.len());
