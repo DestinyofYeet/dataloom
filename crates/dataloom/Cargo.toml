@@ -1,0 +1,32 @@
+[package]
+name = "dataloom"
+version = { workspace = true }
+edition = { workspace = true }
+description = { workspace = true }
+license-file = { workspace = true }
+repository = { workspace = true }
+readme = { workspace = true }
+keywords = { workspace = true }
+categories = { workspace = true }
+
+[dependencies]
+dataloom-macro = { workspace = true }
+anyhow = "1.0.102"
+chrono = { version = "0.4.44", features = ["serde"] }
+itertools = "0.14.0"
+rand = "0.10.1"
+rusqlite = "0.39.0"
+thiserror = "2.0.18"
+tracing = "0.1.44"
+uuid = { version = "1.0", features = ["v4"] }
+r2d2_sqlite = "0.34.0"
+r2d2 = "0.8.10"
+serde = { version = "1.0.228", features = ["derive"] }
+serde_json = "1.0.150"
+tempfile = "~3"
+roxygen = "1.0.5"
+either = "1"
+
+[dev-dependencies]
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+

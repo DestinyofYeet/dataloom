@@ -10,17 +10,17 @@ let
 in
 
 rustPlatform.buildRustPackage {
-  pname = toml.package.name;
-  version = toml.package.version;
+  pname = "dataloom";
+  version = toml.workspace.package.version;
 
   buildInputs = deps.packages;
 
   src = ../.;
 
-  cargoHash = "sha256-/WXdeqagyHPcWJmn8R3agfrasObO7GgZMg6wowMtnsQ=";
+  cargoHash = "sha256-AhisLVfAJ+PbG13ebBaxTdOJj5CykVrLcYkvPuAU1Bw=";
 
   meta = with lib; {
-    description = toml.package.description;
+    description = toml.workspace.package.description;
     license = licenses.agpl3Only;
     platforms = platforms.all;
   };

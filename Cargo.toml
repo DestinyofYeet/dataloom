@@ -1,6 +1,16 @@
-[package]
-name = "dataloom"
-version = "0.3.3"
+[workspace]
+resolver = "3"
+members = ["crates/*", "examples/*"]
+default-members = ["crates/dataloom"]
+
+[workspace.dependencies]
+dataloom = { path = "crates/dataloom", version = "0.3.4"}
+dataloom-macro = { path = "crates/dataloom-macro", version = "0.3.4" }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = { version = "1.0" }
+
+[workspace.package]
+version = "0.3.4"
 edition = "2024"
 description = "A database abstraction layer"
 license-file = "LICENSE"
@@ -8,29 +18,3 @@ repository = "https://git.ole.blue/DestinyofYeet/dataloom"
 readme = "README.md"
 keywords = ["database", "abstraction", "task-scheduling", "tasks"]
 categories = ["database"]
-
-[workspace]
-resolver = "3"
-members = ["dataloom-macro", "examples/serde", "examples/test-client"]
-
-[dependencies]
-anyhow = "1.0.102"
-chrono = { version = "0.4.44", features = ["serde"] }
-itertools = "0.14.0"
-rand = "0.10.1"
-rusqlite = "0.39.0"
-thiserror = "2.0.18"
-tracing = "0.1.44"
-uuid = { version = "1.0", features = ["v4"] }
-dataloom-macro = { path ="dataloom-macro",  version = "0.2.3" }
-r2d2_sqlite = "0.34.0"
-r2d2 = "0.8.10"
-serde = { version = "1.0.228", features = ["derive"] }
-serde_json = "1.0.150"
-tempfile = "~3"
-roxygen = "1.0.5"
-either = "1"
-
-[dev-dependencies]
-tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
-
