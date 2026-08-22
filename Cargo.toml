@@ -13,7 +13,7 @@ categories = { workspace = true }
 path = "src/lib.rs"
 
 [dependencies]
-dataloom-db-sqlite = { path = "crates/dataloom-db-sqlite", version = "0.3.5", optional = true}
+dataloom-db-sqlite = { path = "crates/dataloom-db-sqlite", version = "0.3.7", optional = true}
 
 dataloom-macro = { workspace = true }
 dataloom-db-core = { workspace = true }
@@ -41,10 +41,20 @@ sqlite = ["dep:dataloom-db-sqlite"]
 resolver = "3"
 members = ["crates/*", "examples/*"]
 
+[workspace.package]
+version = "0.3.7"
+edition = "2024"
+description = "A database abstraction layer"
+license-file = "LICENSE"
+repository = "https://git.ole.blue/DestinyofYeet/dataloom"
+readme = "README.md"
+keywords = ["database", "abstraction", "task-scheduling", "tasks"]
+categories = ["database"]
+
 [workspace.dependencies]
-dataloom = { path = ".", version = "0.3.5", features = ["sqlite"]}
-dataloom-macro = { path = "crates/dataloom-macro", version = "0.3.5" }
-dataloom-db-core = { path = "crates/dataloom-db-core", version = "0.3.5"}
+dataloom = { path = ".", version = "0.3.7", features = ["sqlite"]}
+dataloom-macro = { path = "crates/dataloom-macro", version = "0.3.7" }
+dataloom-db-core = { path = "crates/dataloom-db-core", version = "0.3.7"}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
 roxygen = { version = "1.0.5" }
@@ -56,12 +66,3 @@ tracing = { version = "0.1" }
 chrono = { version = "0.4", features = ["serde"] }
 itertools = "0.15"
 
-[workspace.package]
-version = "0.3.6"
-edition = "2024"
-description = "A database abstraction layer"
-license-file = "LICENSE"
-repository = "https://git.ole.blue/DestinyofYeet/dataloom"
-readme = "README.md"
-keywords = ["database", "abstraction", "task-scheduling", "tasks"]
-categories = ["database"]

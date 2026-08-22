@@ -17,7 +17,7 @@ rustPlatform.buildRustPackage {
 
   src = ../.;
 
-  cargoHash = "sha256-QIKrX12kY5aOwQOwmYVByidB1tvJqZcfdMcWR7+PI5w=";
+  cargoHash = "sha256-dbIqKrrfw49Riv83+QeqJniVEF/fPtMIKDcVsrVmldI=";
 
   meta = with lib; {
     description = toml.workspace.package.description;
