@@ -1,17 +1,16 @@
 use std::sync::LazyLock;
 
-use dataloom::core::column::create::{CreateColumn, CreateOptions};
-use dataloom::core::search::SearchQuery;
-use dataloom::core::traits::save_data::SaveData;
-use dataloom::core::{MigrationKind, ModelMigration};
+use dataloom::dataloom_db_core::column::create::{CreateColumn, CreateOptions};
+use dataloom::dataloom_db_core::search::SearchQuery;
+use dataloom::dataloom_db_core::traits::DatabaseStrategy;
+use dataloom::dataloom_db_core::traits::save_data::SaveData;
+use dataloom::dataloom_db_core::{MigrationKind, ModelMigration};
+use dataloom::dataloom_db_sqlite::SqliteStrategy;
 use dataloom::dataloom_macro::{FromIter, SaveData};
 use dataloom::server::memory_strategy::default_strategies::local_storage::LocalMemory;
 use dataloom::{
-    core::{column::ColumnType, traits::model::Model},
-    server::{
-        DataloomServer,
-        database_strategy::{DatabaseStrategy, default_strategies::SqliteStrategy},
-    },
+    dataloom_db_core::{column::ColumnType, traits::model::Model},
+    server::DataloomServer,
     tasks::logstrategy::default_strategies::tracing_strategy::TracingStrategy,
 };
 use serde::{Deserialize, Serialize};

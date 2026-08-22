@@ -6,12 +6,6 @@ inputs:
 runs:
   using: "composite"
   steps:
-    - name: "Check tag"
-      working-directory: ${{ inputs.working-directory }}
-      shell: "nix develop --command bash {0}"
-      run: |
-        [[ "v$(toml get Cargo.toml workspace.package.version -r)" = "${{ github.ref_name  }}" ]] || (echo "Failed to validate package version. Does not match tag." && false)
-
     - name: "Publish macro"
       working-directory: ${{ inputs.working-directory }}
       shell: "nix develop --command bash {0}"

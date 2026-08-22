@@ -10,26 +10,83 @@ env:
   CARGO_REGISTRY_TOKEN: ${{ secrets.CARGO_REGISTRY_TOKEN  }}
 
 jobs:
-  # publish_macro:
-  #   runs-on: debian
-  #   steps:      
-  #     - name: "Install minimal deps"
-  #       run: |
-  #         apt update
-  #         apt install -y git nodejs
+  check_tag:
+    runs-on: native
+    steps:
+      - name: "Check tag"            
+        working-directory: ${{ inputs.working-directory }}
+        shell: "nix develop --command bash {0}"
+        run: |
+          [[ "v$(toml get Cargo.toml workspace.package.version -r)" = "${{ github.ref_name  }}" ]] || (echo "Failed to validate package version. Does not match tag." && false)
 
-  #     - name: "Checkout repository"
-  #       uses: https://code.forgejo.org/actions/checkout@v7
-  #       with:
-  #         fetch-depth: 0
+  publish_macro:
+    runs-on: debian
+    needs:
+      - check_tag
+    steps:      
+      - name: "Install minimal deps"
+        run: |
+          apt update
+          apt install -y git nodejs
 
-  #     - uses: ./.forgejo/actions/docker_deps_setup
-  #     - uses: ./.forgejo/actions/publish
-  #       with:
-  #         working-directory: "dataloom-macro"
+      - name: "Checkout repository"
+        uses: https://code.forgejo.org/actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: ./.forgejo/actions/docker_deps_setup
+      - uses: ./.forgejo/actions/publish
+        with:
+          working-directory: "crates/dataloom-macro"
+
+  publish_db_core:
+    runs-on: debian
+    needs:
+      - check_tag
+    steps: 
+      - name: "Install minimal deps"
+        run: |
+          apt update
+          apt install -y git nodejs
+
+      - name: "Checkout repository"
+        uses: https://code.forgejo.org/actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: ./.forgejo/actions/docker_deps_setup
+      - uses: ./.forgejo/actions/publish
+        with:
+          working-directory: "crates/dataloom-db-core"
+
+  publish_db_sqlite:
+    runs-on: debian
+    needs: 
+      - check_tag
+      - publish_db_core
+    steps: 
+      - name: "Install minimal deps"
+        run: |
+          apt update
+          apt install -y git nodejs
+
+      - name: "Checkout repository"
+        uses: https://code.forgejo.org/actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - uses: ./.forgejo/actions/docker_deps_setup
+      - uses: ./.forgejo/actions/publish
+        with:
+          working-directory: "crates/dataloom-db-sqlite"
 
   publish:
     runs-on: debian
+    needs:
+      - check_tag
+      - publish_db_sqlite
+      - publish_db_core
+
     steps:      
       - name: "Install minimal deps"
         run: |

@@ -198,18 +198,18 @@ dependencies = [
 
 [[package]]
 name = "dataloom"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "anyhow",
  "chrono",
+ "dataloom",
+ "dataloom-db-core",
+ "dataloom-db-sqlite",
  "dataloom-macro",
  "either",
- "itertools",
- "r2d2",
- "r2d2_sqlite",
+ "itertools 0.14.0",
  "rand",
  "roxygen",
- "rusqlite",
  "serde",
  "serde_json",
  "tempfile",
@@ -220,8 +220,44 @@ dependencies = [
 ]
 
 [[package]]
+name = "dataloom-db-core"
+version = "0.3.6"
+dependencies = [
+ "chrono",
+ "either",
+ "itertools 0.15.0",
+ "r2d2",
+ "r2d2_sqlite",
+ "roxygen",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
+name = "dataloom-db-sqlite"
+version = "0.3.6"
+dependencies = [
+ "anyhow",
+ "chrono",
+ "dataloom-db-core",
+ "either",
+ "itertools 0.15.0",
+ "r2d2",
+ "r2d2_sqlite",
+ "roxygen",
+ "rusqlite",
+ "serde",
+ "serde_json",
+ "thiserror",
+ "tracing",
+]
+
+[[package]]
 name = "dataloom-macro"
-version = "0.3.5"
+version = "0.3.6"
 dependencies = [
  "quote",
  "syn 2.0.119",
@@ -368,6 +404,15 @@ name = "itertools"
 version = "0.14.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "2b192c782037fadd9cfa75548310488aabdbf3d2da73885b31bd0abd03351285"
+dependencies = [
+ "either",
+]
+
+[[package]]
+name = "itertools"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "8b4baf93f58d4425749ca49a51c50ebab072c5df6994d08fed93541c331481dc"
 dependencies = [
  "either",
 ]

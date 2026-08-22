@@ -10,14 +10,14 @@ let
 in
 
 rustPlatform.buildRustPackage {
-  pname = "dataloom";
+  pname = toml.package.name;
   version = toml.workspace.package.version;
 
   buildInputs = deps.packages;
 
   src = ../.;
 
-  cargoHash = "sha256-T+NaIUCx0NDzH4c4hSMCJ8F/XeMtyQTiCzfV8A311f8=";
+  cargoHash = "sha256-QIKrX12kY5aOwQOwmYVByidB1tvJqZcfdMcWR7+PI5w=";
 
   meta = with lib; {
     description = toml.workspace.package.description;

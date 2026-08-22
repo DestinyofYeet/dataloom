@@ -95,15 +95,15 @@ pub fn derive_from_iter(input: TokenStream) -> TokenStream {
         let name = input.ident;
 
         return quote!(
-            impl dataloom::core::traits::from_iter::FromIter for #name {
-                fn from_iter(iter: impl Iterator<Item = dataloom::core::traits::from_iter::FromIterValue>) -> Option<Self>
+            impl dataloom::dataloom_db_core::traits::from_iter::FromIter for #name {
+                fn from_iter(iter: impl Iterator<Item = dataloom::dataloom_db_core::traits::from_iter::FromIterValue>) -> Option<Self>
                 where
                     Self: Sized,
                 {
-                    use dataloom::core::column::{FromColumn, ToColumn};
+                    use dataloom::dataloom_db_core::column::{FromColumn, ToColumn};
                     #(#options)*
 
-                    for dataloom::core::traits::from_iter::FromIterValue {
+                    for dataloom::dataloom_db_core::traits::from_iter::FromIterValue {
                         column_name,
                         column_value,
                         column_type,
@@ -157,17 +157,17 @@ pub fn derive_save_data(input: TokenStream) -> TokenStream {
             //     quote!(self.#field_name.clone().into())
             // };
 
-            quote!(dataloom::core::save::SaveModel::new(
+            quote!(dataloom::dataloom_db_core::save::SaveModel::new(
                 Self::get_latest_column_name(#field_name_string).unwrap(),
                 self.#field_name.to_column().unwrap()
             ))
         });
 
         return quote!(
-            impl dataloom::core::traits::save_data::SaveData for #name {
-                fn get_save_data(&self) -> Vec<dataloom::core::save::SaveModel> {
-                    use dataloom::core::column::ToColumn;
-                    use dataloom::core::traits::model::Model;
+            impl dataloom::dataloom_db_core::traits::save_data::SaveData for #name {
+                fn get_save_data(&self) -> Vec<dataloom::dataloom_db_core::save::SaveModel> {
+                    use dataloom::dataloom_db_core::column::ToColumn;
+                    use dataloom::dataloom_db_core::traits::model::Model;
 
                     vec![
                         #(#save_models),*

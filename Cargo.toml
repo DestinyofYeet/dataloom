@@ -1,16 +1,63 @@
+[package]
+name = "dataloom"
+version = { workspace = true }
+edition = { workspace = true }
+description = { workspace = true }
+license-file = { workspace = true }
+repository = { workspace = true }
+readme = { workspace = true }
+keywords = { workspace = true }
+categories = { workspace = true }
+
+[lib]
+path = "src/lib.rs"
+
+[dependencies]
+dataloom-db-sqlite = { path = "crates/dataloom-db-sqlite", version = "0.3.5", optional = true}
+
+dataloom-macro = { workspace = true }
+dataloom-db-core = { workspace = true }
+roxygen = { workspace = true }
+uuid = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+anyhow = "1.0.102"
+chrono = { version = "0.4.44", features = ["serde"] }
+itertools = "0.14.0"
+rand = "0.10.1"
+thiserror = "2.0.18"
+tracing = "0.1.44"
+tempfile = "~3"
+either = "1"
+
+[dev-dependencies]
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+dataloom = { path = ".", features = ["sqlite"] }
+
+[features]
+sqlite = ["dep:dataloom-db-sqlite"]
+
 [workspace]
 resolver = "3"
 members = ["crates/*", "examples/*"]
-default-members = ["crates/dataloom"]
 
 [workspace.dependencies]
-dataloom = { path = "crates/dataloom", version = "0.3.5"}
+dataloom = { path = ".", version = "0.3.5", features = ["sqlite"]}
 dataloom-macro = { path = "crates/dataloom-macro", version = "0.3.5" }
+dataloom-db-core = { path = "crates/dataloom-db-core", version = "0.3.5"}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
+roxygen = { version = "1.0.5" }
+either = { version = "1" }
+uuid = { version = "1.0", features = ["v4"] }
+thiserror = "2.0.20"
+anyhow = "1.0.104"
+tracing = { version = "0.1" }
+chrono = { version = "0.4", features = ["serde"] }
+itertools = "0.15"
 
 [workspace.package]
-version = "0.3.5"
+version = "0.3.6"
 edition = "2024"
 description = "A database abstraction layer"
 license-file = "LICENSE"
