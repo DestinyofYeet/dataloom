@@ -24,16 +24,23 @@ where
     ME: MemoryStrategy + 'static,
 {
     pub fn new(
-        workers: u64,
+        workers: impl Into<Option<u64>>,
         logging_strategy: impl LogStrategy + Send + Sync + 'static,
         database_strategy: D,
         memory_strategy: ME,
     ) -> Result<Self, ServerError> {
         let db = Arc::new(database_strategy);
         let mem = Arc::new(memory_strategy);
+
+        let worker_count = workers.into().unwrap_or(
+            std::thread::available_parallelism()
+                .map_err(|e| ServerError::Parallelism(e.to_string()))?
+                .get() as u64,
+        );
+
         Ok(Self {
             task_handler: TaskHandler::new(
-                workers,
+                worker_count,
                 Arc::new(logging_strategy),
                 db.clone(),
                 mem.clone(),

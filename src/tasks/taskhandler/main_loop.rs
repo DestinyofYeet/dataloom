@@ -8,7 +8,7 @@ use std::{
 };
 
 use dataloom_db_core::traits::DatabaseStrategy;
-use tracing::{debug, error, trace, warn};
+use tracing::{debug, error, info, trace, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -41,6 +41,7 @@ where
     ME: MemoryStrategy + 'static,
 {
     pub(super) fn main_loop(data: MainLoopData<D, ME>) {
+        info!("Number of workers: {}", data.max_workers);
         let mut workers: WorkerList<D, ME> = Vec::with_capacity(data.max_workers as usize);
         let mut task_queue: VecDeque<Arc<Mutex<Task<D, ME>>>> = VecDeque::new();
         let mut task_worker_map: HashMap<Uuid, Rc<Worker<D, ME>>> = HashMap::new();
