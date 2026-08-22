@@ -7,7 +7,7 @@ use std::{
     },
 };
 
-use tracing::{debug, error, warn};
+use tracing::{debug, error, trace, warn};
 use uuid::Uuid;
 
 use crate::{
@@ -84,7 +84,7 @@ where
                     break;
                 }
                 TaskEvent::ProcessTask(task) => {
-                    Self::respawn_dead_workers(&data, &mut workers);
+                    Self::respawn_dead_workers(&data, &mut workers, &mut task_worker_map);
 
                     for worker in workers.iter() {
                         if worker.get_task().is_none() {
@@ -95,6 +95,7 @@ where
                     }
 
                     task_queue.push_back(task);
+                    trace!("queue size: {}", task_queue.len());
                 }
 
                 TaskEvent::TaskDone(uuid) => {
@@ -105,8 +106,9 @@ where
                         }
                     }
 
-                    if let Some(task) = task_queue.pop_front() {
-                        let worker = task_worker_map.remove(&uuid).expect("to have a worker");
+                    if let Some(task) = task_queue.pop_front()
+                        && let Some(worker) = task_worker_map.remove(&uuid)
+                    {
                         Self::give_worker_task(task, worker.clone(), &mut task_worker_map);
                     }
                 }

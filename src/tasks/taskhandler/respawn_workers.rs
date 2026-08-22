@@ -1,6 +1,7 @@
-use std::rc::Rc;
+use std::{collections::HashMap, rc::Rc};
 
 use tracing::{error, warn};
+use uuid::Uuid;
 
 use crate::{
     server::{database_strategy::DatabaseStrategy, memory_strategy::MemoryStrategy},
@@ -21,6 +22,7 @@ where
     pub(super) fn respawn_dead_workers(
         data: &MainLoopData<D, ME>,
         workers: &mut WorkerList<D, ME>,
+        task_worker_map: &mut HashMap<Uuid, Rc<Worker<D, ME>>>,
     ) {
         let active_workers: u64 = workers
             .iter()
@@ -39,6 +41,7 @@ where
                     warn!("Worker {id} is not running! It probably crashed.");
                     if let Some(uuid) = worker.get_task() {
                         warn!("Worker {id} had task id {uuid}.");
+                        _ = task_worker_map.remove(&uuid);
                         match data.sender.send(TaskEvent::TaskDone(uuid)) {
                             Ok(_) => {}
                             Err(e) => {
