@@ -16,6 +16,7 @@ fn store() {
         name: "blub".to_string(),
         created_at: Utc::now(),
         extra_data: TestData::One("whoop".to_string()),
+        number: None,
     };
 
     memory.store(&data).expect("to save data");
@@ -32,6 +33,7 @@ fn get() {
         name: "blub".to_string(),
         created_at: Utc::now(),
         extra_data: TestData::One("whoop".to_string()),
+        number: None,
     };
 
     memory.store(&data).expect("to save data");
@@ -55,6 +57,7 @@ fn update() {
         name: "blub".to_string(),
         created_at: Utc::now(),
         extra_data: TestData::One("whoop".to_string()),
+        number: None,
     };
 
     memory.store(&data).expect("to update data");

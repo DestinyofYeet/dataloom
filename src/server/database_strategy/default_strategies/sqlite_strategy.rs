@@ -561,7 +561,7 @@ impl DatabaseStrategy for SqliteStrategy {
 
             for option in table_options
                 .into_iter()
-                .sorted_by_key(|item| item.priority())
+                .sorted_by_key(Self::table_options_priority)
             {
                 match option {
                     TableOptionsValue::Limit(limit) => {
