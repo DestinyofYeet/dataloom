@@ -1,3 +1,4 @@
+use roxygen::roxygen;
 use std::sync::Arc;
 
 use dataloom_db_core::traits::DatabaseStrategy;
@@ -23,8 +24,12 @@ where
     D: DatabaseStrategy + 'static,
     ME: MemoryStrategy + 'static,
 {
+    #[roxygen]
     pub fn new(
+        /// How many workers the server should use.
+        /// If `None` is passed, it will use `std::thread::available_parallelism` to estimate the number of workers
         workers: impl Into<Option<u64>>,
+
         logging_strategy: impl LogStrategy + Send + Sync + 'static,
         database_strategy: D,
         memory_strategy: ME,
