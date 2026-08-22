@@ -110,6 +110,7 @@ where
                         && let Some(worker) = task_worker_map.remove(&uuid)
                     {
                         Self::give_worker_task(task, worker.clone(), &mut task_worker_map);
+                        trace!("queue size: {}", task_queue.len());
                     }
                 }
                 TaskEvent::RegisterSubscriber {
