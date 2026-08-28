@@ -26,8 +26,7 @@ use itertools::Itertools;
 use r2d2::{Pool, PooledConnection};
 use r2d2_sqlite::SqliteConnectionManager;
 use rusqlite::{Connection, Transaction, params, params_from_iter};
-use tracing::warn;
-use tracing::{debug, error, info, trace};
+use tracing::{debug, info, trace};
 
 use roxygen::roxygen;
 
@@ -633,7 +632,7 @@ impl DatabaseStrategy for SqliteStrategy {
 
         let rows = rows.map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
 
-        let mut rows_ret: u64 = 0;
+        // let mut rows_ret: u64 = 0;
 
         let models = {
             let mut models = Vec::new();

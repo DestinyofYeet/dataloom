@@ -1,10 +1,12 @@
-use std::collections::HashSet;
+use std::{collections::HashSet, sync::Arc};
 
 use itertools::Itertools;
 
 use crate::{
     MigrationKind, ModelMigration,
     column::{ColumnType, ModifyColumnOptionsValues},
+    search::SearchQuery,
+    traits::{DatabaseStrategy, DatabaseStrategyError, from_iter::FromIter, save_data::SaveData},
 };
 
 pub trait Model {
@@ -130,5 +132,91 @@ pub trait Model {
     /// This function is a helper intended for use in Box<dyn ...> situations where T is not available
     fn self_get_columns(&self) -> HashSet<(String, ColumnType)> {
         Self::get_columns()
+    }
+
+    fn save<D>(&mut self, db: Arc<D>) -> Result<(), DatabaseStrategyError>
+    where
+        D: DatabaseStrategy,
+        Self: Sized + FromIter + SaveData,
+    {
+        db.save_model(&db.get_connection(), self)
+    }
+
+    fn save_conn<D>(
+        &mut self,
+        db: Arc<D>,
+        conn: &D::FunctionConnType<'_>,
+    ) -> Result<(), DatabaseStrategyError>
+    where
+        D: DatabaseStrategy,
+        Self: Sized + FromIter + SaveData,
+    {
+        db.save_model(conn, self)
+    }
+
+    fn search_single<D>(
+        db: Arc<D>,
+        query: SearchQuery,
+    ) -> Result<Option<Self>, DatabaseStrategyError>
+    where
+        D: DatabaseStrategy,
+        Self: Sized + FromIter + SaveData,
+    {
+        db.search_single_model(&db.get_connection(), query)
+    }
+
+    fn search_single_conn<D>(
+        db: Arc<D>,
+        conn: &D::FunctionConnType<'_>,
+        query: SearchQuery,
+    ) -> Result<Option<Self>, DatabaseStrategyError>
+    where
+        D: DatabaseStrategy,
+        Self: Sized + FromIter + SaveData,
+    {
+        db.search_single_model(conn, query)
+    }
+
+    fn search_multiple<D>(
+        db: Arc<D>,
+        query: SearchQuery,
+    ) -> Result<Vec<Self>, DatabaseStrategyError>
+    where
+        D: DatabaseStrategy,
+        Self: Sized + FromIter + SaveData,
+    {
+        db.search_multiple_model(&db.get_connection(), query)
+    }
+
+    fn search_multiple_conn<D>(
+        db: Arc<D>,
+        conn: &D::FunctionConnType<'_>,
+        query: SearchQuery,
+    ) -> Result<Vec<Self>, DatabaseStrategyError>
+    where
+        D: DatabaseStrategy,
+        Self: Sized + FromIter + SaveData,
+    {
+        db.search_multiple_model(conn, query)
+    }
+
+    fn remove<D>(db: Arc<D>, query: SearchQuery) -> Result<(), DatabaseStrategyError>
+    where
+        D: DatabaseStrategy,
+        Self: Sized + FromIter + SaveData,
+    {
+        db.remove_model::<Self>(&db.get_connection(), query)
+    }
+
+    fn remove_conn<D>(
+        db: Arc<D>,
+        conn: &D::FunctionConnType<'_>,
+        query: SearchQuery,
+    ) -> Result<(), DatabaseStrategyError>
+    where
+        D: DatabaseStrategy,
+        Self: Sized + FromIter + SaveData,
+    {
+        db.remove_model::<Self>(conn, query)
     }
 }

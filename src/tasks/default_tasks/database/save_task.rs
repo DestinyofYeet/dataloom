@@ -1,7 +1,7 @@
 use std::any::Any;
 
 use dataloom_db_core::traits::{
-    DatabaseStrategy,
+    DatabaseStrategy, DatabaseStrategyError,
     from_iter::FromIter,
     model::Model,
     save_data::{SaveData, ValidateSaveData},
@@ -42,14 +42,18 @@ where
     ME: MemoryStrategy,
 {
     fn run(&mut self, info: RunnableInfo<D, ME>) -> Box<dyn Any + Send + Sync> {
-        let logger = info.get_logger();
         let db = info.get_database();
         let conn = db.get_connection();
         match db.save_model(&conn, &mut self.model) {
             Ok(_) => {}
-            Err(e) => logger.error(&format!("Failed to save model: {e}")),
+            Err(e) => {
+                return Box::new(Err::<i64, DatabaseStrategyError>(e));
+            }
         };
-        Box::new(self.model.get_id())
+
+        Box::new(Ok::<i64, DatabaseStrategyError>(
+            self.model.get_id().unwrap(),
+        ))
     }
 }
 
@@ -57,7 +61,7 @@ impl<M> TaskResultable for SaveModelTask<M>
 where
     M: Model + SaveData + FromIter + ValidateSaveData,
 {
-    type Result = Option<i64>;
+    type Result = Result<i64, DatabaseStrategyError>;
 
     fn downcast(result: crate::tasks::task::TaskResult) -> Self::Result {
         *result.downcast().expect("to parse result")

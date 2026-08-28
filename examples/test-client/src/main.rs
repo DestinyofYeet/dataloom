@@ -15,9 +15,9 @@ use dataloom::{
     server::{
         DataloomServer,
         memory_strategy::{MemoryStrategy, default_strategies::local_storage::LocalMemory},
+        traits::AsyncSave,
     },
     tasks::{
-        default_tasks::database::SaveModelTask,
         logstrategy::default_strategies::tracing_strategy::TracingStrategy,
         runnable_info::RunnableInfo,
         taskhandler::task_actions::spawn_options::TaskSpawnOptions,
@@ -309,18 +309,26 @@ fn main() -> Result<(), anyhow::Error> {
 
     user.group_id = 5;
 
-    let save_task = SaveModelTask::new(user);
+    let save_task = user.save_async(server.get_task_handler()).unwrap();
 
     let task_handler = server.get_task_handler();
     task_handler.spawn_task::<PrintTask>(PrintTask::new())?;
 
-    let _task = task_handler.spawn_task(save_task);
     db.remove_model::<User>(
         &conn,
         SearchQuery::builder()
             .add_constraint(("username", "roflrofl"))
             .build(),
     )?;
+
+    server
+        .get_task_handler()
+        .wait_until_done(&save_task)
+        .unwrap();
+
+    _ = save_task.get_result().unwrap().unwrap();
+
+    println!("Save task done");
 
     drop(conn);
 

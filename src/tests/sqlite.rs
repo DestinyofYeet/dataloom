@@ -90,7 +90,7 @@ pub fn test_save_and_retrieve_task() {
 
     assert_eq!(task.get_state(), TaskState::Done);
 
-    let result = task.get_result();
+    let result = task.get_result().unwrap();
 
     let get_task = GetModelTask::<TestModel>::new(
         SearchQuery::builder()

@@ -4,11 +4,10 @@ use dataloom::dataloom_db_core::column::FromColumn;
 use dataloom::dataloom_db_core::column::create::{CreateColumn, CreateOptions};
 use dataloom::dataloom_db_core::search::SearchQuery;
 use dataloom::dataloom_db_core::traits::from_iter::{FromIter, FromIterValue};
-use dataloom::dataloom_db_core::traits::save_data::SaveData;
 use dataloom::dataloom_db_core::traits::{DatabaseStrategy, DatabaseStrategyError};
 use dataloom::dataloom_db_core::{MigrationKind, ModelMigration};
 use dataloom::dataloom_db_sqlite::SqliteStrategy;
-use dataloom::dataloom_macro::{FromIter, SaveData};
+use dataloom::dataloom_macro::SaveData;
 use dataloom::server::memory_strategy::default_strategies::local_storage::LocalMemory;
 use dataloom::{
     dataloom_db_core::{column::ColumnType, traits::model::Model},
