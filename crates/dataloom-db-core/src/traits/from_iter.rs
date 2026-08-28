@@ -1,4 +1,4 @@
-use crate::column::ColumnType;
+use crate::{column::ColumnType, traits::DatabaseStrategyError};
 
 pub struct FromIterValue {
     pub column_name: String,
@@ -7,7 +7,7 @@ pub struct FromIterValue {
 }
 
 pub trait FromIter {
-    fn from_iter(iter: impl Iterator<Item = FromIterValue>) -> Option<Self>
+    fn from_iter(iter: impl Iterator<Item = FromIterValue>) -> Result<Self, DatabaseStrategyError>
     where
         Self: Sized;
 }

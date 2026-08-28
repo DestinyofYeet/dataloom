@@ -13,7 +13,7 @@ categories = { workspace = true }
 path = "src/lib.rs"
 
 [dependencies]
-dataloom-db-sqlite = { path = "crates/dataloom-db-sqlite", version = "0.3.8", optional = true}
+dataloom-db-sqlite = { path = "crates/dataloom-db-sqlite", version = "0.4.0", optional = true}
 
 dataloom-macro = { workspace = true }
 dataloom-db-core = { workspace = true }
@@ -42,7 +42,7 @@ resolver = "3"
 members = ["crates/*", "examples/*"]
 
 [workspace.package]
-version = "0.3.8"
+version = "0.4.0"
 edition = "2024"
 description = "A database abstraction layer"
 license-file = "LICENSE"
@@ -52,9 +52,9 @@ keywords = ["database", "abstraction", "task-scheduling", "tasks"]
 categories = ["database"]
 
 [workspace.dependencies]
-dataloom = { path = ".", version = "0.3.8", features = ["sqlite"]}
-dataloom-macro = { path = "crates/dataloom-macro", version = "0.3.8" }
-dataloom-db-core = { path = "crates/dataloom-db-core", version = "0.3.8"}
+dataloom = { path = ".", features = ["sqlite"], version = "0.4.0" }
+dataloom-macro = { path = "crates/dataloom-macro", version = "0.4.0" }
+dataloom-db-core = { path = "crates/dataloom-db-core", version = "0.4.0"}
 serde = { version = "1.0", features = ["derive"] }
 serde_json = { version = "1.0" }
 roxygen = { version = "1.0.5" }

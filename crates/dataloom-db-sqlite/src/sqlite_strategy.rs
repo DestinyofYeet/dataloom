@@ -594,7 +594,7 @@ impl DatabaseStrategy for SqliteStrategy {
             .map_err(|e| DatabaseStrategyError::Error(e.to_string()))?;
 
         let rows = stmt
-            .query_map(params_from_iter(params.into_iter()), |row| {
+            .query_map(params_from_iter(params), |row| {
                 let iter = columns.iter().map(|(column, column_type)| {
                     let value = match column_type {
                         ColumnType::Integer => {
@@ -612,61 +612,46 @@ impl DatabaseStrategy for SqliteStrategy {
                             value
                         },
                         Err(e) => {
-                            error!(
+                            return Err(DatabaseStrategyError::SearchModel(format!(
                                 "Expected Column {column} with type {column_type:?} on Model {}, error: {e:?}",
                                 type_name::<T>()
-                            );
-                            return None;
+                            )));
                         }
                     };
 
-                    Some(FromIterValue {
+                    Ok(FromIterValue {
                         column_name: column.to_string(),
                         column_value: value,
                         column_type: *column_type
                     })
-                });
+                }).process_results(|elem| {
+                        T::from_iter(elem)
+                    });
 
-                match iter.clone().all(|value| value.is_some()) {
-                    true => {
-                        let value = T::from_iter(iter.map(|value| value.unwrap()));
+                Ok(iter)
+            });
 
-                        debug!("Got to parse value| is_some: {}", value.is_some());
-                        Ok(value)
-                    },
-                    false => {
-                        warn!("Failed to test for all Some() values");
-                        Ok(None)
-                    }
-                }
-
-            })
-            .map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
+        let rows = rows.map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
 
         let mut rows_ret: u64 = 0;
 
         let models = {
             let mut models = Vec::new();
-            for row in rows {
-                rows_ret += 1;
-                let row = row.map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
-                match row {
-                    Some(value) => {
-                        models.push(value);
-                    }
-                    None => {
-                        trace!("Something was none");
-                    }
-                }
+            for elem in rows {
+                let elem = elem.map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
+                let elem = elem.map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
+
+                models.push(elem?);
             }
+
             models
         };
 
-        trace!(
-            "Database returned {} rows, {} parsed models",
-            rows_ret,
-            models.len()
-        );
+        // trace!(
+        //     "Database returned {} rows, {} parsed models",
+        //     rows_ret,
+        //     models.len()
+        // );
 
         Ok(models)
     }

@@ -1,9 +1,11 @@
 use std::sync::LazyLock;
 
+use dataloom::dataloom_db_core::column::FromColumn;
 use dataloom::dataloom_db_core::column::create::{CreateColumn, CreateOptions};
 use dataloom::dataloom_db_core::search::SearchQuery;
-use dataloom::dataloom_db_core::traits::DatabaseStrategy;
+use dataloom::dataloom_db_core::traits::from_iter::{FromIter, FromIterValue};
 use dataloom::dataloom_db_core::traits::save_data::SaveData;
+use dataloom::dataloom_db_core::traits::{DatabaseStrategy, DatabaseStrategyError};
 use dataloom::dataloom_db_core::{MigrationKind, ModelMigration};
 use dataloom::dataloom_db_sqlite::SqliteStrategy;
 use dataloom::dataloom_macro::{FromIter, SaveData};
@@ -25,7 +27,7 @@ pub enum TestEnum {
     Id(i32),
 }
 
-#[derive(Debug, Serialize, Deserialize, FromIter, SaveData)]
+#[derive(Debug, Serialize, Deserialize, SaveData)]
 pub struct Test {
     id: Option<i64>,
     key: String,
@@ -71,62 +73,63 @@ impl Model for Test {
     }
 }
 
-// impl FromIter for Test {
-//     fn from_iter(iter: impl Iterator<Item = FromIterValue>) -> Option<Self>
-//     where
-//         Self: Sized,
-//     {
-//         let mut id: Option<i64> = None;
-//         let mut key: Option<String> = None;
-//         let mut value: Option<i32> = None;
-//         let mut test_test: Option<TestTest> = None;
-//         let mut test_enum: Option<TestEnum> = None;
+impl FromIter for Test {
+    fn from_iter(iter: impl Iterator<Item = FromIterValue>) -> Result<Self, DatabaseStrategyError>
+    where
+        Self: Sized,
+    {
+        let mut id: Option<i64> = None;
+        let mut key: Option<String> = None;
+        let mut value: Option<i32> = None;
+        let mut test_test: Option<TestTest> = None;
+        let mut test_enum: Option<TestEnum> = None;
 
-//         for FromIterValue {
-//             column_name,
-//             column_value,
-//             column_type,
-//         } in iter
-//         {
-//             if column_name == Self::get_latest_column_name("id").unwrap() {
-//                 id = column_value.from_column(column_type).ok();
-//             }
+        for FromIterValue {
+            column_name,
+            column_value,
+            column_type,
+        } in iter
+        {
+            if column_name == Self::get_latest_column_name("id").unwrap() {
+                id = column_value
+                    .from_column(column_type)
+                    .map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
+            }
 
-//             if column_name == Self::get_latest_column_name("key").unwrap() {
-//                 key = column_value.from_column(column_type).unwrap();
-//             }
+            if column_name == Self::get_latest_column_name("key").unwrap() {
+                key = column_value
+                    .from_column(column_type)
+                    .map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
+            }
 
-//             if column_name == Self::get_latest_column_name("value").unwrap() {
-//                 value = column_value.from_column(column_type).ok();
-//             }
+            if column_name == Self::get_latest_column_name("value").unwrap() {
+                value = column_value
+                    .from_column(column_type)
+                    .map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
+            }
 
-//             if column_name == Self::get_latest_column_name("test_test").unwrap() {
-//                 test_test = column_value.from_column(column_type).ok();
-//             }
+            if column_name == Self::get_latest_column_name("test_test").unwrap() {
+                test_test = column_value
+                    .from_column(column_type)
+                    .map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
+            }
 
-//             if column_name == Self::get_latest_column_name("test_enum").unwrap() {
-//                 test_enum = column_value.from_column(column_type).ok();
-//             }
-//         }
+            if column_name == Self::get_latest_column_name("test_enum").unwrap() {
+                test_enum = column_value
+                    .from_column(column_type)
+                    .map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
+            }
+        }
 
-//         if let Some(id) = id
-//             && let Some(key) = key
-//             && let Some(value) = value
-//             && let Some(test_test) = test_test
-//             && let Some(test_enum) = test_enum
-//         {
-//             Some(Self {
-//                 id: Some(id),
-//                 key,
-//                 value,
-//                 test_test,
-//                 test_enum,
-//             })
-//         } else {
-//             None
-//         }
-//     }
-// }
+        Ok(Self {
+            id: Some(id.unwrap()),
+            key: key.unwrap(),
+            value: value.unwrap(),
+            test_test: test_test.unwrap(),
+            test_enum: test_enum.unwrap(),
+        })
+    }
+}
 
 // impl SaveData for Test {
 //     fn get_save_data(&self) -> Vec<SaveModel> {
@@ -145,6 +148,7 @@ fn main() {
         8,
         TracingStrategy {},
         SqliteStrategy::new("./test.db"),
+        // SqliteStrategy::new_memory(),
         LocalMemory::new(),
     )
     .unwrap();
@@ -169,10 +173,12 @@ fn main() {
             &db.get_connection(),
             SearchQuery::builder().add_constraint(("id", 1)).build(),
         )
-        .unwrap()
         .unwrap();
+    // .unwrap();
 
-    dbg!(model.get_save_data());
+    dbg!(model);
+
+    // dbg!(model.get_save_data());
 
     server.shutdown().unwrap()
 }

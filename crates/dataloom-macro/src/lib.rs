@@ -68,23 +68,19 @@ pub fn derive_from_iter(input: TokenStream) -> TokenStream {
             let prefixed = prefix_ident(name);
             quote!(
                 String { .. } if matches!(Self::get_latest_column_name(#name_string), Some(col) if col == column_name) => {
-                    #prefixed = column_value.from_column(column_type).ok();
+                    #prefixed = column_value.from_column(column_type).map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
                 })
-        });
-
-        let check_options = fields.named.iter().map(|field| {
-            let name = field.ident.clone().unwrap();
-            let prefixed = prefix_ident(name.clone());
-            quote!(let Some(#name) = #prefixed)
         });
 
         let construct_self = fields.named.iter().map(|field| {
             let name = field.ident.clone().unwrap();
 
+            let prefixed = prefix_ident(name.clone());
+
             let value = if is_option(&field.ty) {
-                quote!(Some(#name))
+                quote!(Some(#prefixed.unwrap()))
             } else {
-                quote!(#name)
+                quote!(#prefixed.unwrap())
             };
 
             quote!(
@@ -96,11 +92,11 @@ pub fn derive_from_iter(input: TokenStream) -> TokenStream {
 
         return quote!(
             impl dataloom::dataloom_db_core::traits::from_iter::FromIter for #name {
-                fn from_iter(iter: impl Iterator<Item = dataloom::dataloom_db_core::traits::from_iter::FromIterValue>) -> Option<Self>
+                fn from_iter(iter: impl Iterator<Item = dataloom::dataloom_db_core::traits::from_iter::FromIterValue>) -> Result<Self, dataloom::dataloom_db_core::traits::DatabaseStrategyError>
                 where
                     Self: Sized,
                 {
-                    use dataloom::dataloom_db_core::column::{FromColumn, ToColumn};
+                    use dataloom::dataloom_db_core::{column::{FromColumn, ToColumn}, traits::DatabaseStrategyError};
                     #(#options)*
 
                     for dataloom::dataloom_db_core::traits::from_iter::FromIterValue {
@@ -114,13 +110,9 @@ pub fn derive_from_iter(input: TokenStream) -> TokenStream {
                         }
                     }
 
-                    if #(#check_options)&&* {
-                        return Some(Self {
-                            #(#construct_self),*
-                        });
-                    }
-
-                    None
+                    Ok(Self {
+                        #(#construct_self),*
+                    })
                 }
 
             }
