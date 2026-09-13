@@ -22,7 +22,7 @@ impl MemoryStrategy for LocalMemory {
         Ok(())
     }
 
-    fn retrieve_key<T>(
+    fn get_key<T>(
         &self,
         key: &str,
     ) -> Result<Option<T>, crate::server::memory_strategy::MemoryError>
@@ -48,7 +48,7 @@ impl MemoryStrategy for LocalMemory {
     }
 
     // If you have a safe implementation, please make a pr
-    fn modify_key<T, F, RES>(&self, key: &str, func: F) -> Result<RES, MemoryError>
+    fn update_key<T, F, RES>(&self, key: &str, func: F) -> Result<RES, MemoryError>
     where
         T: DeserializeOwned + std::fmt::Debug + Serialize,
         F: FnOnce(Option<&mut T>) -> RES,

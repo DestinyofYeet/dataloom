@@ -39,7 +39,7 @@ fn get() {
     memory.store(&data).expect("to save data");
 
     let ret_data = memory
-        .retrieve::<TestModel>()
+        .get::<TestModel>()
         .expect("to get data")
         .expect("to have data");
 
@@ -63,7 +63,7 @@ fn update() {
     memory.store(&data).expect("to update data");
 
     // for _ in 0..50_000_000 {
-    let _: Result<(), MemoryError> = memory.modify::<TestModel, _, _>(|item| {
+    let _: Result<(), MemoryError> = memory.update::<TestModel, _, _>(|item| {
         if let Some(item) = item {
             item.name = "rofl".to_string()
         }
@@ -73,7 +73,7 @@ fn update() {
     data.name = "rofl".to_string();
 
     let ret_data = memory
-        .retrieve::<TestModel>()
+        .get::<TestModel>()
         .expect("to get data")
         .expect("to have data");
 

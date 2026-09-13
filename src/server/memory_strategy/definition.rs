@@ -7,11 +7,11 @@ pub trait MemoryStrategy: Send + Sync {
     where
         T: Serialize + std::fmt::Debug;
 
-    fn retrieve_key<T>(&self, key: &str) -> Result<Option<T>, MemoryError>
+    fn get_key<T>(&self, key: &str) -> Result<Option<T>, MemoryError>
     where
         T: DeserializeOwned + std::fmt::Debug;
 
-    fn modify_key<T, F, RES>(&self, key: &str, func: F) -> Result<RES, MemoryError>
+    fn update_key<T, F, RES>(&self, key: &str, func: F) -> Result<RES, MemoryError>
     where
         T: DeserializeOwned + std::fmt::Debug + Serialize,
         F: FnOnce(Option<&mut T>) -> RES;
@@ -25,21 +25,21 @@ pub trait MemoryStrategy: Send + Sync {
         self.store_key(key, &item)
     }
 
-    fn retrieve<T>(&self) -> Result<Option<T>, MemoryError>
+    fn get<T>(&self) -> Result<Option<T>, MemoryError>
     where
         T: DeserializeOwned + std::fmt::Debug,
     {
         let key = std::any::type_name::<T>();
 
-        self.retrieve_key(key)
+        self.get_key(key)
     }
 
-    fn modify<T, F, RES>(&self, func: F) -> Result<RES, MemoryError>
+    fn update<T, F, RES>(&self, func: F) -> Result<RES, MemoryError>
     where
         T: DeserializeOwned + std::fmt::Debug + Serialize,
         F: FnOnce(Option<&mut T>) -> RES,
     {
         let key = std::any::type_name::<T>();
-        self.modify_key(key, func)
+        self.update_key(key, func)
     }
 }
