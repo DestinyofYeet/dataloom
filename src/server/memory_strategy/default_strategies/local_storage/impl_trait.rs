@@ -76,9 +76,7 @@ impl MemoryStrategy for LocalMemory {
             let string =
                 serde_json::to_string(&value_t).map_err(|e| MemoryError::Storage(e.to_string()))?;
 
-            if let Some(value) = value {
-                *value = string;
-            }
+            map.insert(key.to_string(), string);
         }
 
         Ok(result)
