@@ -1,4 +1,4 @@
-use serde::{Deserialize, Serialize, de::DeserializeOwned};
+use serde::{Serialize, de::DeserializeOwned};
 
 use crate::server::memory_strategy::MemoryError;
 
@@ -14,7 +14,7 @@ pub trait MemoryStrategy: Send + Sync {
     fn update_key<T, F, RES>(&self, key: &str, func: F) -> Result<RES, MemoryError>
     where
         T: DeserializeOwned + std::fmt::Debug + Serialize,
-        F: FnOnce(Option<&mut T>) -> RES;
+        F: FnOnce(&mut Option<T>) -> RES;
 
     fn store<T>(&self, item: &T) -> Result<(), MemoryError>
     where
@@ -37,7 +37,7 @@ pub trait MemoryStrategy: Send + Sync {
     fn update<T, F, RES>(&self, func: F) -> Result<RES, MemoryError>
     where
         T: DeserializeOwned + std::fmt::Debug + Serialize,
-        F: FnOnce(Option<&mut T>) -> RES,
+        F: FnOnce(&mut Option<T>) -> RES,
     {
         let key = std::any::type_name::<T>();
         self.update_key(key, func)

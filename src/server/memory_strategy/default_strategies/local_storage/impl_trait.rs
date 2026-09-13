@@ -51,7 +51,7 @@ impl MemoryStrategy for LocalMemory {
     fn update_key<T, F, RES>(&self, key: &str, func: F) -> Result<RES, MemoryError>
     where
         T: DeserializeOwned + std::fmt::Debug + Serialize,
-        F: FnOnce(Option<&mut T>) -> RES,
+        F: FnOnce(&mut Option<T>) -> RES,
     {
         let mut map = self
             .storage
@@ -70,7 +70,7 @@ impl MemoryStrategy for LocalMemory {
             None => None,
         };
 
-        let result = func(value_t.as_mut());
+        let result = func(&mut value_t);
 
         if let Some(value_t) = value_t {
             let string =
