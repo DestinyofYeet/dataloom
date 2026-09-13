@@ -48,9 +48,9 @@ impl MemoryStrategy for LocalMemory {
     }
 
     // If you have a safe implementation, please make a pr
-    fn modify_key<'a, T, F, RES>(&self, key: &str, func: F) -> Result<RES, MemoryError>
+    fn modify_key<T, F, RES>(&self, key: &str, func: F) -> Result<RES, MemoryError>
     where
-        T: serde::Deserialize<'a> + std::fmt::Debug + Serialize,
+        T: DeserializeOwned + std::fmt::Debug + Serialize,
         F: FnOnce(Option<&mut T>) -> RES,
     {
         let mut map = self
@@ -58,38 +58,29 @@ impl MemoryStrategy for LocalMemory {
             .lock()
             .map_err(|e| MemoryError::Retrieve(format!("Failed to get lock: {e}")))?;
 
-        match map.remove_entry(key) {
-            // SAFETY: In my head this should be fine.
-            //
-            // We leak `value` to the stack so serde is happy with alifetime.
-            // We do work in func()
-            // We re-encode the modified value back to json.
-            // We save the json back to the map.
-            // We take thepointer and cast it back to a box and drop it
-            // Since `item` is not referenced after `value` is dropped, no memory corruption should occur.
-            //
-            // This could technically break if in func(), the user returns the `&mut` pointer out as `RET`, but I think the rust borrowchecker should catch that.
-            Some((key, value)) => unsafe {
-                let value: *const String = &mut *(Box::new(value));
+        let value = map.get_mut(key);
 
-                let mut item: T = serde_json::from_str(&*value)
+        let mut value_t = match &value {
+            Some(value) => {
+                let item: T = serde_json::from_str(value.as_str())
                     .map_err(|e| MemoryError::Retrieve(e.to_string()))?;
 
-                let result = func(Some(&mut item));
+                Some(item)
+            }
+            None => None,
+        };
 
-                let json = serde_json::to_string(&item)
-                    .map_err(|e| MemoryError::Storage(e.to_string()))?;
+        let result = func(value_t.as_mut());
 
-                map.insert(key, json);
+        if let Some(value_t) = value_t {
+            let string =
+                serde_json::to_string(&value_t).map_err(|e| MemoryError::Storage(e.to_string()))?;
 
-                // Crashes if this is called.
-                // _ = Box::from_raw(&mut value);
-                // I think value is implicitely freed when `item` is dropped
-
-                Ok(result)
-            },
-
-            None => Ok(func(None)),
+            if let Some(value) = value {
+                *value = string;
+            }
         }
+
+        Ok(result)
     }
 }
