@@ -96,7 +96,7 @@ pub fn derive_from_iter(input: TokenStream) -> TokenStream {
                 where
                     Self: Sized,
                 {
-                    use dataloom::dataloom_db_core::{column::{FromColumn, ToColumn}, traits::DatabaseStrategyError};
+                    use dataloom::dataloom_db_core::{column::{FromColumn, ToColumn}, traits::{DatabaseStrategyError, model::Model}};
                     #(#options)*
 
                     for dataloom::dataloom_db_core::traits::from_iter::FromIterValue {
