@@ -198,7 +198,7 @@ dependencies = [
 
 [[package]]
 name = "dataloom"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -222,7 +222,7 @@ dependencies = [
 
 [[package]]
 name = "dataloom-db-core"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "chrono",
  "either",
@@ -239,7 +239,7 @@ dependencies = [
 
 [[package]]
 name = "dataloom-db-sqlite"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -258,7 +258,7 @@ dependencies = [
 
 [[package]]
 name = "dataloom-macro"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "quote",
  "syn 2.0.119",
@@ -816,7 +816,7 @@ dependencies = [
 
 [[package]]
 name = "stress-test"
-version = "0.5.3"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "dataloom",
