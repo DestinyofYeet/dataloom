@@ -11,7 +11,7 @@ use crate::{
     server::memory_strategy::MemoryStrategy,
     tasks::{
         task::Task,
-        taskhandler::{TaskHandler, main_loop::WorkerByHasTask},
+        taskhandler::{TaskHandler, main_loop::HasTaskByWorkerId},
         worker::Worker,
     },
 };
@@ -25,7 +25,7 @@ where
         task: Arc<Mutex<Task<D, ME>>>,
         worker: Rc<Worker<D, ME>>,
         task_worker_map: &mut HashMap<Uuid, Rc<Worker<D, ME>>>,
-        worker_by_has_task: &mut WorkerByHasTask,
+        worker_by_has_task: &mut HasTaskByWorkerId,
     ) {
         let task_id = task.lock().expect("to get lock").get_id();
         match worker.schedule_task(task) {

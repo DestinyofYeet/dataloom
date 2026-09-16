@@ -11,5 +11,7 @@
     sqlite.dev
     cargo-expand
     toml-cli
+    cargo-deny
+    commitizen
   ];
 }

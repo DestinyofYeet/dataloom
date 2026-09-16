@@ -12,7 +12,7 @@ use crate::{
     tasks::{
         taskhandler::{
             TaskHandler,
-            main_loop::{MainLoopData, WorkerByHasTask, WorkerList, WrappedTask},
+            main_loop::{HasTaskByWorkerId, MainLoopData, WorkerList, WrappedTask},
         },
         worker::Worker,
     },
@@ -27,7 +27,7 @@ where
         task_queue: &'a mut VecDeque<WrappedTask<D, ME>>,
         workers: &'a mut WorkerList<D, ME>,
         task_worker_map: &'a mut HashMap<Uuid, Rc<Worker<D, ME>>>,
-        worker_by_has_task: &'a mut WorkerByHasTask,
+        worker_by_has_task: &'a mut HasTaskByWorkerId,
     },
     Long {
         long_worker_count: &'a mut u64,

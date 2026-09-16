@@ -17,8 +17,9 @@ jobs:
           git checkout "${{ github.head_ref }}"
           git pull
       - name: Check commit format
+        shell: "nix develop --command bash {0}"
         run: |
-          nix run nixpkgs#commitizen -- check --rev-range origin/main..HEAD
+          commitizen check --rev-range origin/main..HEAD
 
   check_cargo_lock:
     runs-on: native
@@ -28,9 +29,11 @@ jobs:
         uses: https://code.forgejo.org/actions/checkout@v6
         with:
           fetch-depth: 0
+
       - name: "Check lock file"
+        shell: "nix develop --command bash {0}"
         run: |
-          nix run nixpkgs#cargo -- update -w
+          cargo update -w
           git diff --exit-code > lock_patch.diff
 
       - name: Upload patch diff
@@ -41,3 +44,16 @@ jobs:
           path: lock_patch.diff
           show-progress: true
           overwrite: true
+
+  check_licenses:
+    runs-on: native
+    if: '! github.event.pull_request.draft'
+    steps:
+      - name: "Fetch source"
+        uses: https://code.forgejo.org/actions/checkout@v6
+
+      - name: "Check licenses"
+        shell: "nix develop --command bash {0}"
+        run: |
+          cargo deny check licenses
+

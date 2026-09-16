@@ -38,7 +38,9 @@ where
 
 pub(super) type WorkerList<D, ME> = Vec<Rc<Worker<D, ME>>>;
 pub(super) type WrappedTask<D, ME> = Arc<Mutex<Task<D, ME>>>;
-pub(super) type WorkerByHasTask = HashMap<u64, bool>;
+pub(super) type HasTaskByWorkerId = HashMap<u64, bool>;
+pub(super) type WorkerByTaskId<D, ME> = HashMap<Uuid, Rc<Worker<D, ME>>>;
+pub(super) type SubscriberByTaskId = HashMap<Uuid, Sender<TaskSubscriberEvent>>;
 
 impl<D, ME> TaskHandler<D, ME>
 where
@@ -50,8 +52,8 @@ where
 
         let mut workers: WorkerList<D, ME> = Vec::with_capacity(data.max_workers as usize);
         let mut task_queue: VecDeque<WrappedTask<D, ME>> = VecDeque::new();
-        let mut task_worker_map: HashMap<Uuid, Rc<Worker<D, ME>>> = HashMap::new();
-        let mut worker_by_has_task: WorkerByHasTask = HashMap::new();
+        let mut task_worker_map: WorkerByTaskId<D, ME> = HashMap::new();
+        let mut worker_by_has_task: HasTaskByWorkerId = HashMap::new();
 
         let mut accept_new_tasks = true;
 
@@ -68,7 +70,7 @@ where
             ));
         }
 
-        let mut subscribers = HashMap::<Uuid, Sender<TaskSubscriberEvent>>::new();
+        let mut subscribers: SubscriberByTaskId = HashMap::new();
 
         let mut long_worker_count: u64 = 0;
 
@@ -94,6 +96,7 @@ where
                     }
                     break;
                 }
+
                 TaskEvent::ProcessTask(task) => {
                     Self::internal_spawn_task(
                         task,
@@ -130,6 +133,7 @@ where
                         }
                     }
                 }
+
                 TaskEvent::RegisterSubscriber {
                     for_task,
                     subscriber,
@@ -142,6 +146,7 @@ where
                         drop(sender)
                     }
                 }
+
                 TaskEvent::ProcessLongTask(task) => {
                     Self::internal_spawn_task(
                         task,
