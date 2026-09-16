@@ -338,8 +338,8 @@ fn main() -> Result<(), anyhow::Error> {
         println!("Stopping long task");
         *stop.lock().expect("to get lock") = true;
     }
-    std::thread::sleep(Duration::from_secs(5));
-    server.shutdown()?;
+
+    server.shutdown(true)?;
 
     Ok(())
 }

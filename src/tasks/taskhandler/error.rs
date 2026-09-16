@@ -12,6 +12,9 @@ pub enum TaskHandlerError {
 
     #[error("Failed to join on thread")]
     Join,
+
+    #[error("Failed to receive message: {0}")]
+    Recieve(String),
 }
 
 impl<D, ME> From<SendError<TaskEvent<D, ME>>> for TaskHandlerError

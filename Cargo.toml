@@ -29,6 +29,7 @@ thiserror = "2.0.18"
 tracing = "0.1.44"
 tempfile = "~3"
 either = "1"
+oneshot = { version = "0.2.1", features = ["std"] }
 
 [dev-dependencies]
 tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }

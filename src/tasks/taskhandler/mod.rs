@@ -2,6 +2,7 @@ mod definition;
 mod error;
 mod get;
 mod give_worker_task;
+mod internal_spawn_task;
 mod main_loop;
 mod respawn_workers;
 mod shutdown;

@@ -35,6 +35,12 @@ where
     UnregisterSubscriber {
         for_task: Uuid,
     },
+
+    GetQueueSize {
+        response: oneshot::Sender<u64>,
+    },
+
+    NoNewTask,
 }
 
 pub enum TaskSubscriberEvent {

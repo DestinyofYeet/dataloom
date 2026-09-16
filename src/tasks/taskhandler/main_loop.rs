@@ -15,7 +15,10 @@ use crate::{
     server::memory_strategy::MemoryStrategy,
     tasks::{
         task::Task,
-        taskhandler::{TaskEvent, TaskHandler, TaskSubscriberEvent, task_actions::TaskActions},
+        taskhandler::{
+            TaskEvent, TaskHandler, TaskSubscriberEvent,
+            internal_spawn_task::InternalTaskSpawnType, task_actions::TaskActions,
+        },
         worker::Worker,
     },
 };
@@ -34,6 +37,8 @@ where
 }
 
 pub(super) type WorkerList<D, ME> = Vec<Rc<Worker<D, ME>>>;
+pub(super) type WrappedTask<D, ME> = Arc<Mutex<Task<D, ME>>>;
+pub(super) type WorkerByHasTask = HashMap<u64, bool>;
 
 impl<D, ME> TaskHandler<D, ME>
 where
@@ -42,9 +47,13 @@ where
 {
     pub(super) fn main_loop(data: MainLoopData<D, ME>) {
         info!("Number of workers: {}", data.max_workers);
+
         let mut workers: WorkerList<D, ME> = Vec::with_capacity(data.max_workers as usize);
-        let mut task_queue: VecDeque<Arc<Mutex<Task<D, ME>>>> = VecDeque::new();
+        let mut task_queue: VecDeque<WrappedTask<D, ME>> = VecDeque::new();
         let mut task_worker_map: HashMap<Uuid, Rc<Worker<D, ME>>> = HashMap::new();
+        let mut worker_by_has_task: WorkerByHasTask = HashMap::new();
+
+        let mut accept_new_tasks = true;
 
         for i in 0..data.max_workers {
             workers.push(Rc::new(
@@ -63,7 +72,7 @@ where
 
         let mut long_worker_count: u64 = 0;
 
-        'mainloop: while let Some(command) = data.recv.iter().next() {
+        while let Some(command) = data.recv.iter().next() {
             match command {
                 TaskEvent::Shutdown => {
                     for worker in workers.iter() {
@@ -86,18 +95,17 @@ where
                     break;
                 }
                 TaskEvent::ProcessTask(task) => {
-                    Self::respawn_dead_workers(&data, &mut workers, &mut task_worker_map);
-
-                    for worker in workers.iter() {
-                        if worker.get_task().is_none() {
-                            Self::give_worker_task(task, worker.clone(), &mut task_worker_map);
-
-                            continue 'mainloop;
-                        }
-                    }
-
-                    task_queue.push_back(task);
-                    trace!("queue size: {}", task_queue.len());
+                    Self::internal_spawn_task(
+                        task,
+                        &data,
+                        accept_new_tasks,
+                        InternalTaskSpawnType::Regular {
+                            workers: &mut workers,
+                            task_worker_map: &mut task_worker_map,
+                            task_queue: &mut task_queue,
+                            worker_by_has_task: &mut worker_by_has_task,
+                        },
+                    );
                 }
 
                 TaskEvent::TaskDone(uuid) => {
@@ -108,11 +116,18 @@ where
                         }
                     }
 
-                    if let Some(worker) = task_worker_map.remove(&uuid)
-                        && let Some(task) = task_queue.pop_front()
-                    {
-                        Self::give_worker_task(task, worker.clone(), &mut task_worker_map);
-                        trace!("queue size: {}", task_queue.len());
+                    if let Some(worker) = task_worker_map.remove(&uuid) {
+                        worker_by_has_task.insert(worker.get_id(), false);
+
+                        if let Some(task) = task_queue.pop_front() {
+                            Self::give_worker_task(
+                                task,
+                                worker.clone(),
+                                &mut task_worker_map,
+                                &mut worker_by_has_task,
+                            );
+                            trace!("queue size: {}", task_queue.len());
+                        }
                     }
                 }
                 TaskEvent::RegisterSubscriber {
@@ -128,32 +143,27 @@ where
                     }
                 }
                 TaskEvent::ProcessLongTask(task) => {
-                    long_worker_count += 1;
+                    Self::internal_spawn_task(
+                        task,
+                        &data,
+                        accept_new_tasks,
+                        InternalTaskSpawnType::Long {
+                            long_worker_count: &mut long_worker_count,
+                        },
+                    );
+                }
 
-                    let worker = match Worker::new(
-                        long_worker_count + data.max_workers,
-                        data.sender.clone(),
-                        data.task_actions.clone(),
-                        data.database.clone(),
-                        data.memory.clone(),
-                    ) {
-                        Ok(value) => value,
+                TaskEvent::GetQueueSize { response } => {
+                    match response.send(task_queue.len() as u64) {
+                        Ok(_) => {}
                         Err(e) => {
-                            warn!("Failed to spawn long running worker {long_worker_count}: {e}");
-                            return;
+                            error!("Failed to respond to GetQueueSize request: {e}")
                         }
-                    };
-
-                    match worker.schedule_task(task) {
-                        Ok(_) => {}
-                        Err(e) => error!("Failed to schedule long running task: {e}"),
                     }
+                }
 
-                    // immediately send the stop command. It won't get processed until the task has finished
-                    match worker.stop() {
-                        Ok(_) => {}
-                        Err(e) => error!("Failed to stop long running worker: {e}"),
-                    };
+                TaskEvent::NoNewTask => {
+                    accept_new_tasks = false;
                 }
             }
         }

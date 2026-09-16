@@ -179,5 +179,5 @@ fn main() {
 
     // dbg!(model.get_save_data());
 
-    server.shutdown().unwrap()
+    server.shutdown(true).unwrap()
 }

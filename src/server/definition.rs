@@ -68,9 +68,16 @@ where
         &self.task_handler
     }
 
-    pub fn shutdown(&mut self) -> Result<(), ServerError> {
+    #[roxygen]
+    pub fn shutdown(
+        &mut self,
+        /// Defines if all existing tasks should finish or be terminated immediately
+        wait: bool,
+    ) -> Result<(), ServerError> {
         if !self.has_shutdown {
-            self.task_handler.shutdown()?;
+            self.task_handler.shutdown(wait)?;
+
+            self.has_shutdown = true;
         }
         Ok(())
     }

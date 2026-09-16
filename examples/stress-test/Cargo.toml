@@ -1,0 +1,16 @@
+[package]
+name = "stress-test"
+version.workspace = true
+edition.workspace = true
+description.workspace = true
+license-file.workspace = true
+repository.workspace = true
+readme.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[dependencies]
+tracing-subscriber = { version = "0.3.23", features = ["env-filter"] }
+dataloom = { workspace = true }
+anyhow.workspace = true
+rand = "0.10.2"

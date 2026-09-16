@@ -40,7 +40,7 @@ pub fn test_save_and_retrieve2() {
     .unwrap()
     .unwrap();
 
-    server.shutdown().unwrap();
+    server.shutdown(true).unwrap();
 }
 
 #[test]
@@ -69,7 +69,7 @@ pub fn test_save_and_retrieve() {
     .unwrap()
     .unwrap();
 
-    server.shutdown().unwrap();
+    server.shutdown(true).unwrap();
 }
 
 #[test]
@@ -109,7 +109,7 @@ pub fn test_save_and_retrieve_task() {
 
     assert_eq!(model, result);
 
-    server.shutdown().unwrap();
+    server.shutdown(true).unwrap();
 }
 
 #[test]

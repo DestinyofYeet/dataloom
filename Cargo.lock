@@ -208,6 +208,7 @@ dependencies = [
  "dataloom-macro",
  "either",
  "itertools 0.14.0",
+ "oneshot",
  "rand",
  "roxygen",
  "serde",
@@ -523,6 +524,12 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "384b8ab6d37215f3c5301a95a4accb5d64aa607f1fcb26a11b5303878451b4fe"
 
 [[package]]
+name = "oneshot"
+version = "0.2.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "cfe21416a02c693fb9f980befcb230ecc70b0b3d1cc4abf88b9675c4c1457f0c"
+
+[[package]]
 name = "parking_lot"
 version = "0.12.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -805,6 +812,16 @@ dependencies = [
  "js-sys",
  "rsqlite-vfs",
  "wasm-bindgen",
+]
+
+[[package]]
+name = "stress-test"
+version = "0.5.3"
+dependencies = [
+ "anyhow",
+ "dataloom",
+ "rand",
+ "tracing-subscriber",
 ]
 
 [[package]]
