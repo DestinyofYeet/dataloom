@@ -82,7 +82,7 @@ where
     ) -> Self {
         let (sender, receiver) = mpsc::channel();
 
-        let task_actions = Arc::new(TaskActions::new(sender.clone(), log_strategy.clone()));
+        let task_actions = Arc::new(TaskActions::new(sender.clone()));
 
         let data = MainLoopData {
             recv: receiver,

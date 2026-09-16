@@ -2,11 +2,11 @@ use std::time::Duration;
 
 use chrono::{DateTime, Utc};
 use dataloom_db_core::traits::DatabaseStrategy;
-use tracing::{debug, warn};
+use tracing::warn;
 
 use crate::{
     server::memory_strategy::MemoryStrategy,
-    tasks::{default_tasks::internal::cron_interval::CronWorker, runnable_info::RunnableInfo},
+    tasks::default_tasks::internal::cron_interval::CronWorker,
 };
 
 impl<D, ME> CronWorker<D, ME>

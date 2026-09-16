@@ -45,7 +45,7 @@ fn main() -> Result<(), anyhow::Error> {
 
     tracing_subscriber::fmt().with_env_filter(filter).init();
 
-    let mut server = DataloomServer::new(
+    let server = DataloomServer::new(
         None,
         TracingStrategy {},
         SqliteStrategy::new_memory(),

@@ -1,4 +1,4 @@
-use std::sync::{Arc, Mutex, mpsc::Sender};
+use std::sync::mpsc::Sender;
 
 use dataloom_db_core::traits::DatabaseStrategy;
 
@@ -6,7 +6,6 @@ use crate::{
     server::memory_strategy::MemoryStrategy,
     tasks::{
         default_tasks::internal::cron_interval::{CronWorker, ReoccuringTaskList},
-        reoccurring_tasks::ReoccuringTask,
         taskhandler::TaskEvent,
     },
 };

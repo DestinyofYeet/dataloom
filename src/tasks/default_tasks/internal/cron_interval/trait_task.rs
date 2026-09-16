@@ -18,7 +18,7 @@ where
     D: DatabaseStrategy,
     ME: MemoryStrategy,
 {
-    fn run(&mut self, run_info: RunnableInfo<D, ME>) -> Box<dyn std::any::Any + Send + Sync> {
+    fn run(&mut self, _: RunnableInfo<D, ME>) -> Box<dyn std::any::Any + Send + Sync> {
         loop {
             let (next_duration, next_tasks_idx) = match self.get_next_task() {
                 None => {

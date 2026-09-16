@@ -3,10 +3,7 @@ use std::sync::{Arc, Mutex};
 use cron::Schedule;
 use dataloom_db_core::traits::DatabaseStrategy;
 
-use crate::{
-    server::memory_strategy::MemoryStrategy,
-    tasks::task::{Runnable, Task},
-};
+use crate::{server::memory_strategy::MemoryStrategy, tasks::task::Task};
 
 pub struct ReoccuringTask<D, ME>
 where
