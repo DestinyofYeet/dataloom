@@ -19,7 +19,7 @@ jobs:
       - name: Check commit format
         shell: "nix develop --command bash {0}"
         run: |
-          commitizen check --rev-range origin/main..HEAD
+          cz check --rev-range origin/main..HEAD
 
   check_cargo_lock:
     runs-on: native
