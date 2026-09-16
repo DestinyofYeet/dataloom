@@ -45,7 +45,7 @@ jobs:
           show-progress: true
           overwrite: true
 
-  check_licenses:
+  check_cargo_deny:
     runs-on: native
     if: '! github.event.pull_request.draft'
     steps:
