@@ -1,6 +1,6 @@
 mod definition;
-mod get;
-pub(crate) mod impl_clone;
+mod error;
 mod new;
-
 pub use definition::*;
+
+pub use error::*;

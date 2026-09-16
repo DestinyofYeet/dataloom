@@ -1,5 +1,6 @@
 pub mod default_tasks;
 pub mod logstrategy;
+pub mod reoccurring_tasks;
 pub mod runnable_info;
 pub mod task;
 pub mod taskhandler;

@@ -12,6 +12,7 @@ use uuid::Uuid;
 use crate::{
     server::memory_strategy::MemoryStrategy,
     tasks::{
+        default_tasks::internal::cron_interval::{CronWorker, ReoccuringTaskList},
         logstrategy::LogStrategyType,
         task::Task,
         taskhandler::{main_loop::MainLoopData, task_actions::TaskActions},
@@ -64,6 +65,8 @@ where
     pub(super) handle: Option<JoinHandle<()>>,
     pub(super) database_handle: Arc<D>,
     pub(super) memory_handle: Arc<ME>,
+
+    pub(super) reoccuring_tasks: ReoccuringTaskList<D, ME>,
 }
 
 impl<D, ME> TaskHandler<D, ME>
@@ -88,6 +91,7 @@ where
             database: database_handle.clone(),
             memory: memory_handle.clone(),
             task_actions: task_actions.clone(),
+            log_strategy: log_strategy.clone(),
         };
 
         let handle = thread::Builder::new()
@@ -97,7 +101,11 @@ where
             })
             .unwrap();
 
-        Self {
+        let reoccuring_task_list = Arc::new(Mutex::new(Vec::new()));
+
+        let cron_worker = CronWorker::new(reoccuring_task_list.clone(), sender.clone());
+
+        let myself = Self {
             max_workers,
             log_strategy,
             to_handler: sender,
@@ -105,6 +113,13 @@ where
             database_handle,
             memory_handle,
             task_actions,
-        }
+            reoccuring_tasks: reoccuring_task_list,
+        };
+
+        myself
+            .spawn_task_long_running(cron_worker)
+            .expect("to be able to spawn cron_worker");
+
+        myself
     }
 }

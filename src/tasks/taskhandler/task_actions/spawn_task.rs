@@ -29,7 +29,7 @@ where
         T: TaskResultable + TaskRunnable<D, ME> + Send + Sync + 'static,
     {
         let runnable: Runnable<D, ME> = Box::new(runnable);
-        let task = Arc::new(Mutex::new(Task::new(runnable, self.log_strategy.clone())));
+        let task = Arc::new(Mutex::new(Task::new(runnable)));
 
         let task_ref = TaskRef::new(task.clone());
         if options.is_long_running() {

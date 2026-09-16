@@ -30,7 +30,6 @@ where
 {
     id: Uuid,
     runnable: Runnable<D, ME>,
-    logger: LogStrategyType,
     state: TaskState,
     result: Option<TaskResult>,
 }
@@ -40,11 +39,10 @@ where
     D: DatabaseStrategy,
     ME: MemoryStrategy,
 {
-    pub(crate) fn new(runnable: Runnable<D, ME>, logger: LogStrategyType) -> Self {
+    pub(crate) fn new(runnable: Runnable<D, ME>) -> Self {
         Self {
             id: Uuid::new_v4(),
             runnable,
-            logger,
             state: TaskState::Queued,
             result: None,
         }
@@ -56,8 +54,9 @@ where
         task_actions: Arc<TaskActions<D, ME>>,
         database_handle: Arc<D>,
         memory_handle: Arc<ME>,
+        logger: LogStrategyType,
     ) -> TaskResult {
-        let logger = WorkerLogger::new(self.logger.clone(), worker_id);
+        let logger = WorkerLogger::new(logger, worker_id);
         let info = RunnableInfo::new(logger, database_handle, memory_handle, task_actions);
         self.runnable.run(info)
     }

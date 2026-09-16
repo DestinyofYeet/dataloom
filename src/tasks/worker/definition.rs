@@ -14,6 +14,7 @@ use uuid::Uuid;
 use crate::{
     server::memory_strategy::MemoryStrategy,
     tasks::{
+        logstrategy::LogStrategyType,
         task::{Task, TaskState},
         taskhandler::{TaskEvent, task_actions::TaskActions},
         worker::WorkerError,
@@ -52,6 +53,7 @@ where
         task_actions: Arc<TaskActions<D, ME>>,
         database_handle: Arc<D>,
         memory_handle: Arc<ME>,
+        log_strategy: LogStrategyType,
     ) -> Result<Self, WorkerError> {
         #[allow(clippy::type_complexity)]
         let (tx, rx): (Sender<WorkerCommand<D, ME>>, Receiver<WorkerCommand<D, ME>>) =
@@ -86,6 +88,7 @@ where
                                 task_actions.clone(),
                                 database_handle.clone(),
                                 memory_handle.clone(),
+                                log_strategy.clone(),
                             );
                             task.set_result(result);
                             task.set_state(TaskState::Done);

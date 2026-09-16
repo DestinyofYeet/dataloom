@@ -10,6 +10,7 @@ mod spawn_task;
 mod spawn_task_long_running;
 pub mod task_actions;
 mod wait_until_done;
+mod spawn_reocurring_task;
 
 pub use definition::*;
 pub use error::*;

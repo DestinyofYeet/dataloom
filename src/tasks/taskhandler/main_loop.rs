@@ -14,6 +14,7 @@ use uuid::Uuid;
 use crate::{
     server::memory_strategy::MemoryStrategy,
     tasks::{
+        logstrategy::LogStrategyType,
         task::Task,
         taskhandler::{
             TaskEvent, TaskHandler, TaskSubscriberEvent,
@@ -34,6 +35,7 @@ where
     pub(super) database: Arc<D>,
     pub(super) memory: Arc<ME>,
     pub(super) task_actions: Arc<TaskActions<D, ME>>,
+    pub(super) log_strategy: LogStrategyType,
 }
 
 pub(super) type WorkerList<D, ME> = Vec<Rc<Worker<D, ME>>>;
@@ -65,6 +67,7 @@ where
                     data.task_actions.clone(),
                     data.database.clone(),
                     data.memory.clone(),
+                    data.log_strategy.clone(),
                 )
                 .expect("to create workers"),
             ));

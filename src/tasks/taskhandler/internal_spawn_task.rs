@@ -88,6 +88,7 @@ where
                     data.task_actions.clone(),
                     data.database.clone(),
                     data.memory.clone(),
+                    data.log_strategy.clone(),
                 ) {
                     Ok(value) => value,
                     Err(e) => {
