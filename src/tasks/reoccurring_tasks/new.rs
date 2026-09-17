@@ -23,6 +23,8 @@ where
 {
     #[roxygen]
     pub fn new<T>(
+        description: impl Into<String>,
+
         /// A cron expression using the `cron` crate
         cron_expr: &str,
 
@@ -36,7 +38,10 @@ where
         let schedule =
             Schedule::from_str(cron_expr).map_err(|e| ReoccuringTaskError::Cron(e.to_string()))?;
 
+        let description = description.into();
+
         Ok(Self {
+            description,
             schedule,
             task: Arc::new(Mutex::new(Task::new(Box::new(runnable)))),
         })

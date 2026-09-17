@@ -55,20 +55,22 @@ fn main() -> Result<(), anyhow::Error> {
     let task_handler = server.get_task_handler();
 
     task_handler.spawn_reocurring_task(ReoccuringTask::new(
+        "Task1",
         "*/10 * * * * *",
         ReoccuringTest {
             data: 0,
             name: "1".to_string(),
         },
-    )?);
+    )?)?;
 
     task_handler.spawn_reocurring_task(ReoccuringTask::new(
+        "Task2",
         "*/15 * * * * *",
         ReoccuringTest {
             data: 100,
             name: "2".to_string(),
         },
-    )?);
+    )?)?;
 
     std::thread::sleep(Duration::from_mins(60));
 

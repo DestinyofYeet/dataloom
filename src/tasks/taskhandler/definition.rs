@@ -103,9 +103,7 @@ where
 
         let reoccuring_task_list = Arc::new(Mutex::new(Vec::new()));
 
-        let cron_worker = CronWorker::new(reoccuring_task_list.clone(), sender.clone());
-
-        let myself = Self {
+        Self {
             max_workers,
             log_strategy,
             to_handler: sender,
@@ -114,12 +112,6 @@ where
             memory_handle,
             task_actions,
             reoccuring_tasks: reoccuring_task_list,
-        };
-
-        myself
-            .spawn_task_long_running(cron_worker)
-            .expect("to be able to spawn cron_worker");
-
-        myself
+        }
     }
 }

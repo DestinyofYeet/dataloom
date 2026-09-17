@@ -10,6 +10,7 @@ where
     D: DatabaseStrategy,
     ME: MemoryStrategy,
 {
+    pub(crate) description: String,
     pub(crate) schedule: Schedule,
     pub(crate) task: Arc<Mutex<Task<D, ME>>>,
 }
