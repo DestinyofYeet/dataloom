@@ -45,7 +45,7 @@ jobs:
           show-progress: true
           overwrite: true
 
-  check_cargo_deny:
+  check_cargo:
     runs-on: native
     if: '! github.event.pull_request.draft'
     steps:
@@ -61,4 +61,9 @@ jobs:
         shell: "nix develop --command bash {0}"
         run: |
           cargo deny check advisories
+
+      - name: "Check cargo audit"
+        shell: "nix develop --command bash {0}"
+        run: |
+          cargo audit
 

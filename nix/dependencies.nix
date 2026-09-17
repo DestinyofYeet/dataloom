@@ -12,6 +12,7 @@
     cargo-expand
     toml-cli
     cargo-deny
+    cargo-audit
     commitizen
   ];
 }
