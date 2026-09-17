@@ -27,6 +27,7 @@ pub struct TestModel {
     pub number: Option<i64>,
     pub created_at: DateTime<Utc>,
     pub extra_data: TestData,
+    pub blub: Option<String>,
 }
 
 impl TestModel {
@@ -42,6 +43,7 @@ impl TestModel {
             number: Some(number.into().unwrap_or(0)),
             created_at: Utc::now(),
             extra_data,
+            blub: None,
         }
     }
 }
@@ -84,6 +86,16 @@ impl Model for TestModel {
                         ModifyColumnOptionsValues::Add {
                             new_type: ColumnType::Integer,
                             new_options: CreateOptions::default().set_default("0".to_string()),
+                        },
+                    )]),
+                ),
+                ModelMigration::new(
+                    2,
+                    MigrationKind::Modify(vec![ModifyColumn::new(
+                        "blub",
+                        ModifyColumnOptionsValues::Add {
+                            new_type: ColumnType::String,
+                            new_options: CreateOptions::default(),
                         },
                     )]),
                 ),

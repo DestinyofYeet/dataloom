@@ -20,15 +20,25 @@ where
     fn validate_save_data(&self) -> Option<Vec<String>> {
         let cols = Self::get_columns();
 
-        if !cols.contains(&("id".to_string(), ColumnType::Integer)) {
-            return Some(["id (Integer)"].iter().map(|e| e.to_string()).collect_vec());
+        {
+            let mut id_exists = false;
+            for (name, col_type, _) in cols.iter() {
+                if name == self.get_id_column_name() && *col_type == ColumnType::Integer {
+                    id_exists = true;
+                    break;
+                }
+            }
+
+            if !id_exists {
+                return Some(["id (Integer)"].iter().map(|e| e.to_string()).collect_vec());
+            }
         }
 
         let save_data = self.get_save_data();
 
         let mut missing_save_data = Vec::new();
 
-        for (name, c_type) in cols {
+        for (name, c_type, _) in cols {
             if !save_data.iter().any(|model| model.key == name) {
                 missing_save_data.push(format!("{name} {c_type:?}"));
             }

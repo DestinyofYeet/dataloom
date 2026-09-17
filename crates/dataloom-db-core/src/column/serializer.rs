@@ -62,7 +62,7 @@ pub trait FromColumn<S> {
 
 impl<S> FromColumn<S> for S
 where
-    Self: ToString,
+    Self: ToString + std::fmt::Debug,
 {
     fn from_column<T>(&self, column_type: ColumnType) -> Result<T, SerdeColumnError>
     where
@@ -74,7 +74,7 @@ where
             ColumnType::Json => match serde_json::from_str::<T>(&self.to_string()) {
                 Ok(value) => Ok(Either::Left(value)),
                 Err(e) => {
-                    trace!("Failed to parse T from_str: {e} | Trying Value::String");
+                    trace!("Failed to parse T from_str: {e} | Fallback Value::String");
 
                     // This is for basic enums with no data
                     Ok(Either::Right(Value::String(self.to_string())))
@@ -100,7 +100,9 @@ where
                         })?;
 
                 Ok(Either::Right(Value::Number(
-                    Number::from_f64(float).unwrap(),
+                    Number::from_f64(float).ok_or(SerdeColumnError::Deserialize(format!(
+                        "Failed to convert {float} to serde_json::Number"
+                    )))?,
                 )))
             }
             ColumnType::Date => Ok(Either::Right(Value::String(self.to_string()))),

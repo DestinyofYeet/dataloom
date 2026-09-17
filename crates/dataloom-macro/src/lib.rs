@@ -41,6 +41,10 @@ fn prefix_ident(ident: Ident) -> Ident {
     Ident::new(&format!("macro_{ident}"), ident.span())
 }
 
+fn prefix_ident_custom(ident: Ident, prefix: &str) -> Ident {
+    Ident::new(&format!("{prefix}{ident}"), ident.span())
+}
+
 #[proc_macro_derive(FromIter)]
 pub fn derive_from_iter(input: TokenStream) -> TokenStream {
     let input = parse_macro_input!(input as DeriveInput);
@@ -51,25 +55,50 @@ pub fn derive_from_iter(input: TokenStream) -> TokenStream {
         let options = fields.named.iter().map(|field| {
             let ty = field.ty.clone();
             let name = field.ident.clone().unwrap();
-            let ty = if is_option(&ty) {
-                option_inner_type(&ty).unwrap().clone()
-            } else {
-                ty
-            };
 
             let prefixed = prefix_ident(name);
-            quote!(let mut #prefixed: Option<#ty> = None;)
+            let value = if is_option(&ty) {
+                quote!(Some(None))
+            } else {
+                quote!(None)
+            };
+
+            quote!(let mut #prefixed: Option<#ty> = #value;)
         });
 
         let fill_options = fields.named.iter().map(|field| {
             let name = field.ident.clone().unwrap();
             let name_string = name.to_string();
+            let field_type = &field.ty;
 
             let prefixed = prefix_ident(name);
+
+            let res_value = quote!(column_value.from_column::<#field_type>(column_type).map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?);
+
+            // let tracing_fmt_string = format!("Set {}={{value:?}}", prefixed);
+
             quote!(
                 String { .. } if matches!(Self::get_latest_column_name(#name_string), Some(col) if col == column_name) => {
-                    #prefixed = column_value.from_column(column_type).map_err(|e| DatabaseStrategyError::SearchModel(e.to_string()))?;
+                    let value = #res_value;
+                    // tracing::trace!(#tracing_fmt_string);
+                    #prefixed = Some(#res_value);
                 })
+        });
+
+        let panic_strings = fields.named.iter().map(|field| {
+            let name = field.ident.clone().unwrap();
+
+            let prefixed = prefix_ident(name.clone());
+            let prefixed_str = prefixed.to_string();
+            let panic_string = format!(
+                "expected to be able to unwrap field '{name}' with value {{{prefixed_str}:?}}"
+            );
+
+            let panic_var = prefix_ident_custom(name.clone(), "panic_");
+
+            quote!(
+                let #panic_var = format!(#panic_string);
+            )
         });
 
         let construct_self = fields.named.iter().map(|field| {
@@ -77,14 +106,10 @@ pub fn derive_from_iter(input: TokenStream) -> TokenStream {
 
             let prefixed = prefix_ident(name.clone());
 
-            let value = if is_option(&field.ty) {
-                quote!(Some(#prefixed.unwrap()))
-            } else {
-                quote!(#prefixed.unwrap())
-            };
+            let panic_var = prefix_ident_custom(name.clone(), "panic_");
 
             quote!(
-                #name: #value
+                #name: #prefixed.unwrap_or_else(|| panic!("{}", #panic_var))
             )
         });
 
@@ -109,6 +134,8 @@ pub fn derive_from_iter(input: TokenStream) -> TokenStream {
                             _ => {}
                         }
                     }
+
+                    #(#panic_strings)*
 
                     Ok(Self {
                         #(#construct_self),*

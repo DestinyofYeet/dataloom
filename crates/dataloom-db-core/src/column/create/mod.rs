@@ -1,4 +1,5 @@
 mod definition;
+mod getter;
 mod impl_options;
 mod impl_validate;
 

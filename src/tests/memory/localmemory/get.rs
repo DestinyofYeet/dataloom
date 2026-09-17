@@ -11,13 +11,7 @@ fn store() {
 
     let memory = server.get_memory();
 
-    let data = TestModel {
-        id: None,
-        name: "blub".to_string(),
-        created_at: Utc::now(),
-        extra_data: TestData::One("whoop".to_string()),
-        number: None,
-    };
+    let data = TestModel::new("blub", None, TestData::One("whoope".to_string()));
 
     memory.store(&data).expect("to save data");
 }
@@ -28,13 +22,7 @@ fn get() {
 
     let memory = server.get_memory();
 
-    let data = TestModel {
-        id: None,
-        name: "blub".to_string(),
-        created_at: Utc::now(),
-        extra_data: TestData::One("whoop".to_string()),
-        number: None,
-    };
+    let data = TestModel::new("blub", None, TestData::One("whoope".to_string()));
 
     memory.store(&data).expect("to save data");
 
@@ -52,13 +40,7 @@ fn update() {
 
     let memory = server.get_memory();
 
-    let mut data = TestModel {
-        id: None,
-        name: "blub".to_string(),
-        created_at: Utc::now(),
-        extra_data: TestData::One("whoop".to_string()),
-        number: None,
-    };
+    let mut data = TestModel::new("blub", None, TestData::One("whoope".to_string()));
 
     memory.store(&data).expect("to update data");
 

@@ -35,6 +35,9 @@ pub enum DatabaseStrategyError {
 
     #[error("Failed to delete Model: {0}")]
     DeleteModel(String),
+
+    #[error("Failed to parse constraints: {0}")]
+    ParseConstraint(String),
 }
 
 pub trait DatabaseStrategy: Send + Sync {

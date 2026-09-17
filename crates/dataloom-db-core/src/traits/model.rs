@@ -1,10 +1,13 @@
-use std::{collections::HashSet, sync::Arc};
+use std::{
+    collections::{HashMap, HashSet},
+    sync::Arc,
+};
 
 use itertools::Itertools;
 
 use crate::{
     MigrationKind, ModelMigration,
-    column::{ColumnType, ModifyColumnOptionsValues},
+    column::{ColumnType, ModifyColumnOptionsValues, create::CreateOptions},
     search::SearchQuery,
     traits::{DatabaseStrategy, DatabaseStrategyError, from_iter::FromIter, save_data::SaveData},
 };
@@ -63,10 +66,10 @@ pub trait Model {
     }
 
     /// This function returns all columns and types defined by the get_migration()
-    fn get_columns() -> HashSet<(String, ColumnType)> {
+    fn get_columns() -> Vec<(String, ColumnType, CreateOptions)> {
         let migration = Self::get_migration();
 
-        let mut columns: HashSet<(String, ColumnType)> = HashSet::new();
+        let mut columns: HashMap<String, (ColumnType, CreateOptions)> = HashMap::new();
 
         for (idx, column) in migration
             .iter()
@@ -79,27 +82,30 @@ pub trait Model {
                         panic!("The first iteration must be a creation.")
                     }
 
-                    for item in values
-                        .iter()
-                        .map(|col| (Self::get_latest_column_name(&col.key).unwrap(), col.value))
-                    {
-                        columns.insert(item);
+                    for item in values.iter().map(|col| {
+                        (
+                            Self::get_latest_column_name(&col.key).unwrap(),
+                            col.value,
+                            col.options.clone(),
+                        )
+                    }) {
+                        columns.insert(item.0, (item.1, item.2));
                     }
                 }
 
                 MigrationKind::Modify(values) => {
                     for value in values {
-                        match value.options {
+                        match &value.options {
                             ModifyColumnOptionsValues::Rename { to: _ } => {}
                             ModifyColumnOptionsValues::Drop => {}
                             ModifyColumnOptionsValues::Add {
                                 new_type,
-                                new_options: _,
+                                new_options: options,
                             } => {
-                                columns.insert((
+                                columns.insert(
                                     Self::get_latest_column_name(&value.key).unwrap(),
-                                    new_type,
-                                ));
+                                    (*new_type, options.clone()),
+                                );
                             }
                         }
                     }
@@ -108,15 +114,21 @@ pub trait Model {
         }
 
         if let MigrationKind::Create(value) = &migration[0].kind {
-            for item in value
-                .iter()
-                .map(|e| (Self::get_latest_column_name(&e.key).unwrap(), e.value))
-            {
-                columns.insert(item);
+            for item in value.iter().map(|e| {
+                (
+                    Self::get_latest_column_name(&e.key).unwrap(),
+                    e.value,
+                    e.options.clone(),
+                )
+            }) {
+                columns.insert(item.0, (item.1, item.2));
             }
         }
 
         columns
+            .into_iter()
+            .map(|(key, (col_value, col_options))| (key, col_value, col_options))
+            .collect_vec()
     }
 
     /// This function is a helper intended for use in Box<dyn ...> situations where T is not available
@@ -130,7 +142,7 @@ pub trait Model {
     }
 
     /// This function is a helper intended for use in Box<dyn ...> situations where T is not available
-    fn self_get_columns(&self) -> HashSet<(String, ColumnType)> {
+    fn self_get_columns(&self) -> Vec<(String, ColumnType, CreateOptions)> {
         Self::get_columns()
     }
 

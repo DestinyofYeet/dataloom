@@ -1,7 +1,7 @@
 use crate::column::ColumnType;
 use std::collections::HashSet;
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum CreateColumnOptionsValues {
     NonNullable,
     PrimaryKey,
@@ -10,12 +10,12 @@ pub enum CreateColumnOptionsValues {
     Check(String),
 }
 
-#[derive(Debug, PartialEq, Eq, Hash)]
+#[derive(Debug, PartialEq, Eq, Hash, Clone)]
 pub enum CreateTableOptionValues {
     ForeignKey { table: String, column: String },
 }
 
-#[derive(Debug, Default, Eq, PartialEq)]
+#[derive(Debug, Default, Eq, PartialEq, Clone)]
 pub struct CreateOptions {
     pub column_options: HashSet<(u64, CreateColumnOptionsValues)>,
     pub table_options: HashSet<CreateTableOptionValues>,

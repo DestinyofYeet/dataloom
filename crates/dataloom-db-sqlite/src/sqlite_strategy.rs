@@ -151,7 +151,9 @@ impl SqliteStrategy {
         options.join(",\n")
     }
 
-    fn parse_constraints<T>(input: Option<SearchConstraint>) -> (String, Vec<ColumnValue>)
+    fn parse_constraints<T>(
+        input: Option<SearchConstraint>,
+    ) -> Result<(String, Vec<ColumnValue>), DatabaseStrategyError>
     where
         T: Model,
     {
@@ -164,7 +166,12 @@ impl SqliteStrategy {
         while let Some(value) = next {
             iterations += 1;
             let (column, operator, value, other) = value.get();
-            let column = T::get_latest_column_name(&column).unwrap();
+            let column = T::get_latest_column_name(&column).ok_or(
+                DatabaseStrategyError::ParseConstraint(format!(
+                    "Column {column} on table {} does not exist!",
+                    T::TABLE_NAME
+                )),
+            )?;
 
             values.push(value);
 
@@ -201,7 +208,7 @@ impl SqliteStrategy {
             }
         }
 
-        (output, values)
+        Ok((output, values))
     }
 }
 
@@ -542,7 +549,7 @@ impl DatabaseStrategy for SqliteStrategy {
 
         sql += &format!("SELECT * FROM {table_name}");
 
-        let (constraints, values) = Self::parse_constraints::<T>(constraints);
+        let (constraints, values) = Self::parse_constraints::<T>(constraints)?;
 
         if !constraints.is_empty() {
             sql += &format!(" WHERE {constraints}");
@@ -599,16 +606,34 @@ impl DatabaseStrategy for SqliteStrategy {
 
         let rows = stmt
             .query_map(params_from_iter(params), |row| {
-                let iter = columns.iter().map(|(column, column_type)| {
-                    let value = match column_type {
+                let iter = columns.iter().map(|(column, column_type, col_options)| {
+                    let value: Result<Option<String>, _> = match column_type {
                         ColumnType::Integer => {
-                            row.get(column.as_str()).map(|e: i64| format!("{e}"))
+                            if col_options.is_optional() {                                
+                                row.get(column.as_str()).map(|e: Option<i64>| e.map(|e| format!("{e}")))
+                            } else {
+                                row.get(column.as_str()).map(|e: i64| Some(format!("{e}")))
+                            }
                         }
-                        ColumnType::Float => row.get(column.as_str()).map(|e: f64| format!("{e}")),
+                        ColumnType::Float => {
+                            if col_options.is_optional() {
+                                row.get(column.as_str()).map(|e: Option<f64>| e.map(|e| format!("{e}")))
+                            } else {
+                                
+                                row.get(column.as_str()).map(|e: f64| Some(format!("{e}")))
+                            }
+                        },
                         ColumnType::String |
                         ColumnType::Date |
                         ColumnType::Json |
-                        ColumnType::Bool => row.get(column.as_str()).map(|e: String| e),
+                        ColumnType::Bool => {
+                            if col_options.is_optional() {
+                                row.get(column.as_str()).map(|e: Option<String>| e)
+                            } else {
+                                
+                                row.get(column.as_str()).map(|e: String| Some(e))
+                            }
+                        },
                     };
 
                     let value = match value {
@@ -617,18 +642,19 @@ impl DatabaseStrategy for SqliteStrategy {
                         },
                         Err(e) => {
                             return Err(DatabaseStrategyError::SearchModel(format!(
-                                "Expected Column {column} with type {column_type:?} on Model {}, error: {e:?}",
+                                "Expected Column '{column}' with type '{column_type:?}' on Model {}, error: {e:?}",
                                 type_name::<T>()
                             )));
                         }
                     };
 
-                    Ok(FromIterValue {
+                    Ok(value.map(|value| FromIterValue {
                         column_name: column.to_string(),
                         column_value: value,
                         column_type: *column_type
-                    })
+                    }))
                 }).process_results(|elem| {
+                        let elem = elem.flatten();
                         T::from_iter(elem)
                     });
 
@@ -673,7 +699,7 @@ impl DatabaseStrategy for SqliteStrategy {
 
         let (constraints, _) = query.values();
 
-        let (constraints, values) = Self::parse_constraints::<T>(constraints);
+        let (constraints, values) = Self::parse_constraints::<T>(constraints)?;
 
         if !constraints.is_empty() {
             sql += &format!(" WHERE {constraints}")

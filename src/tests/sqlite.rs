@@ -5,9 +5,9 @@ use crate::{
     },
     tests::{TestData, TestModel, setup_test_server},
 };
-use dataloom_db_core::search::table_options::TableOptions;
 use dataloom_db_core::search::table_options::table_options_value::order_by_options::OrderByOptions;
 use dataloom_db_core::{column::ToColumn, traits::DatabaseStrategy};
+use dataloom_db_core::{search::table_options::TableOptions, traits::model::Model};
 
 use chrono::Utc;
 use dataloom_db_core::search::SearchQuery;
@@ -21,13 +21,7 @@ pub fn test_save_and_retrieve2() {
 
     db.migrate_model::<TestModel>().unwrap();
 
-    let mut model = TestModel {
-        id: None,
-        name: "some_name".to_string(),
-        created_at: Utc::now(),
-        extra_data: TestData::Two,
-        number: None,
-    };
+    let mut model = TestModel::new("some_name", None, TestData::Two);
 
     db.save_model(&db.get_connection(), &mut model).unwrap();
 
@@ -39,8 +33,6 @@ pub fn test_save_and_retrieve2() {
     )
     .unwrap()
     .unwrap();
-
-    server.shutdown(true).unwrap();
 }
 
 #[test]
@@ -50,13 +42,7 @@ pub fn test_save_and_retrieve() {
 
     db.migrate_model::<TestModel>().unwrap();
 
-    let mut model = TestModel {
-        id: None,
-        name: "some_name".to_string(),
-        created_at: Utc::now(),
-        extra_data: TestData::One("weeee".to_string()),
-        number: None,
-    };
+    let mut model = TestModel::new("some_name", None, TestData::One("weee".to_string()));
 
     db.save_model(&db.get_connection(), &mut model).unwrap();
 
@@ -68,8 +54,6 @@ pub fn test_save_and_retrieve() {
     )
     .unwrap()
     .unwrap();
-
-    server.shutdown(true).unwrap();
 }
 
 #[test]
@@ -77,6 +61,8 @@ pub fn test_save_and_retrieve_task() {
     let mut server = setup_test_server();
     let task_handler = server.get_task_handler();
     let db = server.get_database();
+
+    println!("hi");
 
     db.migrate_model::<TestModel>().unwrap();
 
@@ -108,8 +94,6 @@ pub fn test_save_and_retrieve_task() {
     model.id = result.id;
 
     assert_eq!(model, result);
-
-    server.shutdown(true).unwrap();
 }
 
 #[test]
@@ -121,21 +105,9 @@ pub fn multi_query_test() {
 
     let conn = db.get_connection();
 
-    let mut model = TestModel {
-        id: None,
-        name: "some_name".to_string(),
-        created_at: Utc::now(),
-        extra_data: TestData::One("weeee".to_string()),
-        number: Some(8),
-    };
+    let mut model = TestModel::new("some_name", 8, TestData::One("weee".to_string()));
 
-    let mut model2 = TestModel {
-        id: None,
-        name: "some_name".to_string(),
-        created_at: Utc::now(),
-        extra_data: TestData::Two,
-        number: Some(1),
-    };
+    let mut model2 = TestModel::new("some_name", 1, TestData::Two);
 
     db.save_model(&conn, &mut model).unwrap();
     db.save_model(&conn, &mut model2).unwrap();
@@ -172,23 +144,11 @@ pub fn test_order_by() {
 
     let conn = db.get_connection();
 
-    let mut model1 = TestModel {
-        id: None,
-        name: "model1".to_string(),
-        created_at: Utc::now(),
-        extra_data: TestData::One("hi".to_string()),
-        number: Some(0),
-    };
+    let mut model1 = TestModel::new("model1", 0, TestData::One("hi".to_string()));
 
     db.save_model(&conn, &mut model1).unwrap();
 
-    let mut model2 = TestModel {
-        id: None,
-        name: "model2".to_string(),
-        created_at: Utc::now(),
-        extra_data: TestData::Two,
-        number: Some(1),
-    };
+    let mut model2 = TestModel::new("model2", 1, TestData::Two);
 
     db.save_model(&conn, &mut model2).unwrap();
 
@@ -203,4 +163,29 @@ pub fn test_order_by() {
         .unwrap();
 
     assert_eq!(retrieved, model2);
+}
+
+#[test]
+pub fn test_optional_field_str() {
+    let mut server = setup_test_server();
+    let db = server.get_database();
+
+    db.migrate_model::<TestModel>().unwrap();
+
+    let mut model1 = TestModel::new("some_name", None, TestData::Two);
+
+    model1.blub = None;
+
+    model1.save(db.clone()).unwrap();
+
+    let retrieved = TestModel::search_single(
+        db.clone(),
+        SearchQuery::builder()
+            .add_constraint(("id", model1.id.unwrap()))
+            .build(),
+    )
+    .unwrap()
+    .unwrap();
+
+    assert_eq!(model1, retrieved);
 }
