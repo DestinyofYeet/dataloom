@@ -560,7 +560,12 @@ impl DatabaseStrategy for SqliteStrategy {
                         sql += &format!(" LIMIT {limit}");
                     }
                     TableOptionsValue::OrderBy { column, options } => {
-                        let column = T::get_latest_column_name(&column).unwrap();
+                        let column = T::get_latest_column_name(&column).ok_or_else(|| {
+                            DatabaseStrategyError::SearchModel(format!(
+                                "Column {column} on table {} does not exist.",
+                                T::TABLE_NAME
+                            ))
+                        })?;
 
                         sql += &format!(
                             " Order by {column} {}",
