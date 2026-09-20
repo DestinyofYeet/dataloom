@@ -1,6 +1,11 @@
-use crate::search::{constraint::SearchConstraint, table_options::TableOptions};
+use std::collections::HashSet;
+
+use crate::search::{
+    constraint::SearchConstraint, join_options::JoinOptions, table_options::TableOptionsValue,
+};
 
 pub struct SearchQueryBuilder {
     pub(super) constraint: Option<SearchConstraint>,
-    pub(super) table_options: Option<TableOptions>,
+    pub(super) table_options: HashSet<TableOptionsValue>,
+    pub(super) join_options: Vec<JoinOptions>,
 }

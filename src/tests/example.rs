@@ -79,6 +79,7 @@ pub fn readme_example() {
         value: 1337,
     };
 
+    // This will set the 'id' field.
     db.save_model(&db.get_connection(), &mut my_struct).unwrap();
 
     let my_retrieved_struct: MyStruct = db
@@ -86,9 +87,13 @@ pub fn readme_example() {
             &db.get_connection(),
             SearchQuery::builder()
                 // This searches for id = {my_struct.id}
-                .add_constraint(("id", my_struct.id.unwrap()))
+                .q_where(
+                    SearchConstraint::new::<MyStruct>("id", SearchOp::EQ, my_struct.id.unwrap())
+                        .unwrap(),
+                )
                 .build(),
         )
+        // this returns a Result<Option<MyStruct>, DatabaseStrategyError>
         .unwrap()
         .unwrap();
 
@@ -114,11 +119,10 @@ pub fn other_example() {
         .search_single_model::<MyStruct>(
             &db.get_connection(),
             SearchQuery::builder()
-                .add_constraint(SearchConstraint::new(
-                    "id",
-                    SearchOp::EQ,
-                    my_struct.id.unwrap(),
-                ))
+                .q_where(
+                    SearchConstraint::new::<MyStruct>("id", SearchOp::EQ, my_struct.id.unwrap())
+                        .unwrap(),
+                )
                 .build(),
         )
         .unwrap()

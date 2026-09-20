@@ -1,10 +1,13 @@
+use std::collections::HashSet;
+
 use crate::search::builder::SearchQueryBuilder;
 
 impl SearchQueryBuilder {
     pub fn new() -> Self {
         Self {
             constraint: None,
-            table_options: None,
+            table_options: HashSet::new(),
+            join_options: Vec::new(),
         }
     }
 }

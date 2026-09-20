@@ -1,4 +1,4 @@
-use dataloom_db_core::search::table_options::table_options_value::TableOptionsValue;
+use dataloom_db_core::search::table_options::TableOptionsValue;
 
 use crate::SqliteStrategy;
 

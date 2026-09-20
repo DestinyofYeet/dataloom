@@ -8,6 +8,7 @@ pub enum OtherConstraint {
 
 #[derive(Debug, Clone)]
 pub struct SearchConstraint {
+    pub(super) table: String,
     pub(super) column: String,
     pub(super) operator: SearchOp,
     pub(super) value: ColumnValue,

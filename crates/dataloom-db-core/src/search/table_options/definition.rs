@@ -1,8 +1,10 @@
-use std::collections::HashSet;
+use crate::search::table_options::order_by_options::OrderByOptions;
 
-use crate::search::table_options::table_options_value::TableOptionsValue;
-
-#[derive(Debug, Clone)]
-pub struct TableOptions {
-    pub(super) options: HashSet<TableOptionsValue>,
+#[derive(Clone, Debug, Eq, Hash, PartialEq)]
+pub enum TableOptionsValue {
+    Limit(u64),
+    OrderBy {
+        column: String,
+        options: Option<OrderByOptions>,
+    },
 }

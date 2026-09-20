@@ -1,6 +1,8 @@
 use std::path::PathBuf;
 
 pub mod memory;
+pub mod sqlite;
+
 mod test_model;
 use dataloom_db_core::traits::DatabaseStrategy;
 use dataloom_db_sqlite::SqliteStrategy;
@@ -17,7 +19,6 @@ use crate::{
 };
 
 mod example;
-mod sqlite;
 
 fn get_test_dir() -> PathBuf {
     let tempfile = tempfile::TempDir::new().expect("to get temp dir");

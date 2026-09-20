@@ -10,10 +10,7 @@ use dataloom_db_core::{
         create::{CreateColumnOptionsValues, CreateOptions, CreateTableOptionValues},
     },
     search::{
-        SearchQuery,
-        constraint::{OtherConstraint, SearchConstraint},
-        search_op::SearchOp,
-        table_options::table_options_value::{TableOptionsValue, order_by_options::OrderByOptions},
+        SearchQuery, constraint::{OtherConstraint, SearchConstraint}, join_options::JoinOptions, search_op::SearchOp, table_options::{TableOptionsValue, order_by_options::OrderByOptions}
     },
     traits::{
         DatabaseStrategy, DatabaseStrategyError, TransactionOptions,
@@ -151,11 +148,9 @@ impl SqliteStrategy {
         options.join(",\n")
     }
 
-    fn parse_constraints<T>(
+    fn parse_constraints(
         input: Option<SearchConstraint>,
     ) -> Result<(String, Vec<ColumnValue>), DatabaseStrategyError>
-    where
-        T: Model,
     {
         let mut output = String::new();
         let mut iterations = 0;
@@ -166,13 +161,6 @@ impl SqliteStrategy {
         while let Some(value) = next {
             iterations += 1;
             let (column, operator, value, other) = value.get();
-            let column = T::get_latest_column_name(&column).ok_or(
-                DatabaseStrategyError::ParseConstraint(format!(
-                    "Column {column} on table {} does not exist!",
-                    T::TABLE_NAME
-                )),
-            )?;
-
             values.push(value);
 
             output += &format!(
@@ -545,48 +533,73 @@ impl DatabaseStrategy for SqliteStrategy {
         let mut sql = String::new();
         let table_name = T::TABLE_NAME;
 
-        let (constraints, table_options) = query.values();
+        let (constraints, table_options, join_options) = query.values();
 
-        sql += &format!("SELECT * FROM {table_name}");
+        let columns = {
+          let mut columns = Vec::new();  
 
-        let (constraints, values) = Self::parse_constraints::<T>(constraints)?;
+          for (column, _, _) in T::get_columns() {
+              let column = match T::get_latest_column_name(&column) {
+                Some(column) => column,
+                None => {
+                    return Err(DatabaseStrategyError::SearchModel(format!("Column '{column}' is expected to exist on Model '{}'!", std::any::type_name::<T>())));
+                },
+            };
+
+            columns.push(format!("{table_name}.{column} as {column}"));
+          }
+
+          columns.join(", ")
+        };
+
+        sql += &format!("SELECT {columns} FROM {table_name}");
+
+        let (constraints, values) = Self::parse_constraints(constraints)?;
+
+        for JoinOptions { table_name: j_table_name, join_on_own_field, join_on_root_table_field  } in join_options {
+            let join_on_root_table_field = match T::get_latest_column_name(&join_on_root_table_field) {
+                Some(value) => value,
+                None => {
+                    return Err(DatabaseStrategyError::SearchModel(format!("join_on_root_table_field '{join_on_root_table_field}' on Model '{}' is expected to exist!", type_name::<T>())))
+                },
+            };
+
+            sql += &format!(" join {j_table_name} on {table_name}.{join_on_root_table_field}={j_table_name}.{join_on_own_field}")
+        }
 
         if !constraints.is_empty() {
             sql += &format!(" WHERE {constraints}");
         }
 
-        if let Some(table_options) = table_options {
-            let table_options = table_options.values();
 
-            for option in table_options
-                .into_iter()
-                .sorted_by_key(Self::table_options_priority)
-            {
-                match option {
-                    TableOptionsValue::Limit(limit) => {
-                        sql += &format!(" LIMIT {limit}");
-                    }
-                    TableOptionsValue::OrderBy { column, options } => {
-                        let column = T::get_latest_column_name(&column).ok_or_else(|| {
-                            DatabaseStrategyError::SearchModel(format!(
-                                "Column {column} on table {} does not exist.",
-                                T::TABLE_NAME
-                            ))
-                        })?;
+        for option in table_options
+            .into_iter()
+            .sorted_by_key(Self::table_options_priority)
+        {
+            match option {
+                TableOptionsValue::Limit(limit) => {
+                    sql += &format!(" LIMIT {limit}");
+                }
+                TableOptionsValue::OrderBy { column, options } => {
+                    let column = T::get_latest_column_name(&column).ok_or_else(|| {
+                        DatabaseStrategyError::SearchModel(format!(
+                            "Column {column} on table {} does not exist.",
+                            T::TABLE_NAME
+                        ))
+                    })?;
 
-                        sql += &format!(
-                            " Order by {column} {}",
-                            match options {
-                                Some(value) => {
-                                    match value {
-                                        OrderByOptions::Asc => "ASC",
-                                        OrderByOptions::Desc => "DESC",
-                                    }
+                    sql += &format!(
+                        " Order by {column} {}",
+                        match options {
+                            Some(value) => {
+                                match value {
+                                    OrderByOptions::Asc => "ASC",
+                                    OrderByOptions::Desc => "DESC",
                                 }
-                                None => "",
                             }
-                        )
-                    }
+                            None => "",
+                        }
+                    )
                 }
             }
         }
@@ -697,9 +710,9 @@ impl DatabaseStrategy for SqliteStrategy {
 
         sql += &format!("DELETE FROM {table_name}");
 
-        let (constraints, _) = query.values();
+        let (constraints, _, _) = query.values();
 
-        let (constraints, values) = Self::parse_constraints::<T>(constraints)?;
+        let (constraints, values) = Self::parse_constraints(constraints)?;
 
         if !constraints.is_empty() {
             sql += &format!(" WHERE {constraints}")

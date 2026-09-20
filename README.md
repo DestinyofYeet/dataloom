@@ -91,31 +91,35 @@ In the future I want to implement a `PostgresStrategy` and some other LoggingStr
 
 ```rust
 pub fn main() {
-  let server = DataloomServer::new(8, TracingStrategy {}, SqliteStrategy::new("somePath.db"))?;
-  let db = server.get_database()
+    let server = setup_test_server();
+    let db = server.get_database();
+    db.migrate_model::<MyStruct>().unwrap();
 
-  db.migrate_model::<MyStruct>().unwrap();
+    let mut my_struct = MyStruct {
+        id: None,
+        name: "some_name".to_string(),
+        value: 1337,
+    };
 
-  let mut my_struct = MyStruct {
-    id: None,
-    name: "some_name".to_string(),
-    value: 1337
-  };
+    // This will set the 'id' field.
+    db.save_model(&db.get_connection(), &mut my_struct).unwrap();
 
-  // This will set the 'id' field
-  db.save_model(&db.get_connection(), &mut my_struct).unwrap();
+    let my_retrieved_struct: MyStruct = db
+        .search_single_model::<MyStruct>(
+            &db.get_connection(),
+            SearchQuery::builder()
+                // This searches for id = {my_struct.id}
+                .q_where(
+                    SearchConstraint::new::<MyStruct>("id", SearchOp::EQ, my_struct.id.unwrap())
+                        .unwrap(),
+                )
+                .build(),
+        )
+        // this returns a Result<Option<MyStruct>, DatabaseStrategyError>
+        .unwrap()
+        .unwrap();
 
-  let my_retrieved_struct: MyStruct = db.search_single_model::<MyStruct>(
-      &db.get_connection(),
-      SearchQuery::empty()
-        // This searches for id = {my_struct.id}
-        .add_constraint(("id", my_struct.id.unwrap()))
-  )
-  // this returns a Result<Option<MyStruct>, DatabaseStrategyError>
-  .unwrap()
-  .unwrap();
-
-  assert_eq!(my_retrieved_struct, my_struct);
+    assert_eq!(my_retrieved_struct, my_struct);
 }
 
 ```

@@ -5,11 +5,13 @@ impl SearchQueryBuilder {
         let Self {
             constraint,
             table_options,
+            join_options,
         } = self;
 
         SearchQuery {
             constraint,
             table_options,
+            join_options,
         }
     }
 }

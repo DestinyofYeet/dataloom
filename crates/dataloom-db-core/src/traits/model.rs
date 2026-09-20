@@ -1,7 +1,4 @@
-use std::{
-    collections::{HashMap, HashSet},
-    sync::Arc,
-};
+use std::{collections::HashMap, sync::Arc};
 
 use itertools::Itertools;
 
@@ -38,7 +35,13 @@ pub trait Model {
             .sorted_by_key(|item| item.ordering)
         {
             match &migration.kind {
-                MigrationKind::Create(_) => {}
+                MigrationKind::Create(columns) => {
+                    let test = columns.iter().any(|elem| elem.key == initial_name);
+                    if !test {
+                        // The column didn't exist in the first place
+                        return None;
+                    }
+                }
                 MigrationKind::Modify(modifiers) => {
                     for modification in modifiers {
                         if !past_names.contains(&modification.key) {

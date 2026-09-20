@@ -3,6 +3,8 @@ use std::sync::LazyLock;
 use dataloom::dataloom_db_core::column::FromColumn;
 use dataloom::dataloom_db_core::column::create::{CreateColumn, CreateOptions};
 use dataloom::dataloom_db_core::search::SearchQuery;
+use dataloom::dataloom_db_core::search::constraint::SearchConstraint;
+use dataloom::dataloom_db_core::search::search_op::SearchOp;
 use dataloom::dataloom_db_core::traits::from_iter::{FromIter, FromIterValue};
 use dataloom::dataloom_db_core::traits::{DatabaseStrategy, DatabaseStrategyError};
 use dataloom::dataloom_db_core::{MigrationKind, ModelMigration};
@@ -170,7 +172,9 @@ fn main() {
     let model = db
         .search_single_model::<Test>(
             &db.get_connection(),
-            SearchQuery::builder().add_constraint(("id", 1)).build(),
+            SearchQuery::builder()
+                .q_where(SearchConstraint::new::<Test>("id", SearchOp::EQ, 1).unwrap())
+                .build(),
         )
         .unwrap();
     // .unwrap();

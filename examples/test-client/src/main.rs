@@ -4,10 +4,10 @@ use dataloom::{
     dataloom_db_core::{
         MigrationKind, ModelMigration,
         column::{
-            ColumnType, ColumnValue,
+            ColumnType,
             create::{CreateColumn, CreateOptions},
         },
-        search::SearchQuery,
+        search::{SearchQuery, constraint::SearchConstraint, search_op::SearchOp},
         traits::{DatabaseStrategy, TransactionOptions, model::Model},
     },
     dataloom_db_sqlite::SqliteStrategy,
@@ -278,7 +278,7 @@ fn main() -> Result<(), anyhow::Error> {
     if let Some(found_group) = db.search_single_model::<Group>(
         &conn,
         SearchQuery::builder()
-            .add_constraint(("name", &group.name))
+            .q_where(SearchConstraint::new::<Group>("name", SearchOp::EQ, &group.name).unwrap())
             .build(),
     )? {
         group = found_group;
@@ -300,7 +300,9 @@ fn main() -> Result<(), anyhow::Error> {
         .search_single_model::<User>(
             &conn,
             SearchQuery::builder()
-                .add_constraint(("id", ColumnValue::Integer(user.id.unwrap())))
+                .q_where(
+                    SearchConstraint::new::<User>("id", SearchOp::EQ, user.id.unwrap()).unwrap(),
+                )
                 .build(),
         )?
         .unwrap();
@@ -317,7 +319,7 @@ fn main() -> Result<(), anyhow::Error> {
     db.remove_model::<User>(
         &conn,
         SearchQuery::builder()
-            .add_constraint(("username", "roflrofl"))
+            .q_where(SearchConstraint::new::<User>("username", SearchOp::EQ, "roflrofl").unwrap())
             .build(),
     )?;
 

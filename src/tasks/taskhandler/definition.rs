@@ -12,7 +12,7 @@ use uuid::Uuid;
 use crate::{
     server::memory_strategy::MemoryStrategy,
     tasks::{
-        default_tasks::internal::cron_interval::{CronWorker, ReoccuringTaskList},
+        default_tasks::internal::cron_interval::ReoccuringTaskList,
         logstrategy::LogStrategyType,
         task::Task,
         taskhandler::{main_loop::MainLoopData, task_actions::TaskActions},

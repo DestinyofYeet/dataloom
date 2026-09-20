@@ -3,7 +3,7 @@ use std::time::Duration;
 use chrono::Utc;
 use dataloom_db_core::traits::DatabaseStrategy;
 use itertools::Itertools;
-use tracing::{debug, error, info, trace};
+use tracing::{error, info, trace};
 
 use crate::{
     server::memory_strategy::MemoryStrategy,
