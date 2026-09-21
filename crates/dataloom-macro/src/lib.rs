@@ -164,20 +164,29 @@ pub fn derive_save_data(input: TokenStream) -> TokenStream {
         && let Fields::Named(ref fields) = data.fields
     {
         let name = input.ident;
-        // let name_string = name.to_string();
+
+        let error_strings = fields.named.iter().map(|field| {
+            let field_name = field.ident.clone().unwrap();
+            let field_name_str = field_name.to_string();
+
+            let panic_var_name = prefix_ident_custom(field_name.clone(), "panic_");
+            let panic_var_value = format!(
+                "expected for Self::get_latest_column_name for '{field_name_str}' to be Some."
+            );
+
+            quote!(
+                let #panic_var_name = #panic_var_value;
+            )
+        });
 
         let save_models = fields.named.iter().map(|field| {
             let field_name = field.ident.clone().unwrap();
             let field_name_string = field_name.to_string();
 
-            // let value = if is_option(&field.ty) {
-            //     quote!(self.#field_name)
-            // } else {
-            //     quote!(self.#field_name.clone().into())
-            // };
+            let panic_var_name = prefix_ident_custom(field_name.clone(), "panic_");
 
             quote!(dataloom::dataloom_db_core::save::SaveModel::new(
-                Self::get_latest_column_name(#field_name_string).unwrap(),
+                Self::get_latest_column_name(#field_name_string).unwrap_or_else(|| panic!("{}", #panic_var_name)),
                 self.#field_name.to_column().unwrap()
             ))
         });
@@ -187,6 +196,8 @@ pub fn derive_save_data(input: TokenStream) -> TokenStream {
                 fn get_save_data(&self) -> Vec<dataloom::dataloom_db_core::save::SaveModel> {
                     use dataloom::dataloom_db_core::column::ToColumn;
                     use dataloom::dataloom_db_core::traits::model::Model;
+
+                    #(#error_strings)*
 
                     vec![
                         #(#save_models),*

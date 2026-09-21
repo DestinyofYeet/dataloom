@@ -1,6 +1,7 @@
 use std::{collections::HashMap, sync::Arc};
 
 use itertools::Itertools;
+use tracing::trace;
 
 use crate::{
     MigrationKind, ModelMigration,
@@ -36,10 +37,9 @@ pub trait Model {
         {
             match &migration.kind {
                 MigrationKind::Create(columns) => {
-                    let test = columns.iter().any(|elem| elem.key == initial_name);
-                    if !test {
-                        // The column didn't exist in the first place
-                        return None;
+                    let existed_at_creation = columns.iter().any(|elem| elem.key == initial_name);
+                    if !existed_at_creation {
+                        name = None;
                     }
                 }
                 MigrationKind::Modify(modifiers) => {
@@ -50,15 +50,21 @@ pub trait Model {
 
                         match &modification.options {
                             ModifyColumnOptionsValues::Rename { to } => {
-                                name = Some(to.to_string());
-                                past_names.push(modification.key.clone());
+                                if Some(&modification.key) == name.as_ref() {
+                                    name = Some(to.to_string());
+                                    past_names.push(modification.key.clone());
+                                }
                             }
 
                             ModifyColumnOptionsValues::Drop => name = None,
                             ModifyColumnOptionsValues::Add {
                                 new_type: _,
                                 new_options: _,
-                            } => {}
+                            } => {
+                                if modification.key == initial_name {
+                                    name = Some(initial_name.to_string())
+                                }
+                            }
                         }
                     }
                 }

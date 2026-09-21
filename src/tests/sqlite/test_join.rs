@@ -139,6 +139,7 @@ fn test_join() {
     let results = Transaction::search_multiple(
         db.clone(),
         SearchQuery::builder()
+            // = join on Customer.id = Transaction.customer_id
             .q_join::<Customer>("id", "customer_id")
             .q_where(SearchConstraint::new::<Transaction>("amount", SearchOp::GT, 50).unwrap())
             .q_where(SearchConstraint::new::<Customer>("name", SearchOp::EQ, "Customer1").unwrap())
