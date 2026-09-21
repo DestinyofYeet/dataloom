@@ -210,7 +210,7 @@ dependencies = [
 
 [[package]]
 name = "dataloom"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -235,7 +235,7 @@ dependencies = [
 
 [[package]]
 name = "dataloom-db-core"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "chrono",
  "either",
@@ -249,7 +249,7 @@ dependencies = [
 
 [[package]]
 name = "dataloom-db-sqlite"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "chrono",
@@ -268,7 +268,7 @@ dependencies = [
 
 [[package]]
 name = "dataloom-macro"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "quote",
  "syn 2.0.119",
@@ -731,7 +731,7 @@ checksum = "d6f6ff9a378485b298a5286656da665ba74413d36db0979633275d2e708145d4"
 
 [[package]]
 name = "reoccuring-test"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "dataloom",
@@ -908,7 +908,7 @@ dependencies = [
 
 [[package]]
 name = "stress-test"
-version = "0.8.0"
+version = "0.9.0"
 dependencies = [
  "anyhow",
  "dataloom",
