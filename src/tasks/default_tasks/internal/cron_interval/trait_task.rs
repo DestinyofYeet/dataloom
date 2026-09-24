@@ -21,6 +21,22 @@ where
     ME: MemoryStrategy,
 {
     fn run(&mut self, _: RunnableInfo<D, ME>) -> Box<dyn std::any::Any + Send + Sync> {
+        let tasks = self.tasks.lock().expect("to get lock");
+        for task in tasks.iter() {
+            if task.run_at_startup {
+                match self.sender.send(TaskEvent::ProcessTask(task.task.clone())) {
+                    Ok(_) => {
+                        info!("Queued Task '{}' to run at startup!", task.description)
+                    }
+                    Err(e) => {
+                        error!("Failed to queue Task '{}': {e}", task.description)
+                    }
+                }
+            }
+        }
+
+        drop(tasks);
+
         loop {
             let tasks = self.tasks.lock().expect("to get lock");
             let (next_duration, next_tasks) = match Self::get_next_task(&tasks) {
@@ -66,7 +82,7 @@ where
                 match self.sender.send(TaskEvent::ProcessTask(task.task.clone())) {
                     Ok(_) => {}
                     Err(e) => {
-                        error!("Failed to send scheduled task to main pool: {e}");
+                        error!("Failed to queue scheduled task on main pool: {e}");
                     }
                 }
             }

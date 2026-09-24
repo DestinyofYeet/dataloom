@@ -41,6 +41,7 @@ where
         let description = description.into();
 
         Ok(Self {
+            run_at_startup: false,
             description,
             schedule,
             task: Arc::new(Mutex::new(Task::new(Box::new(runnable)))),

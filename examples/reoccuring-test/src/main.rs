@@ -63,14 +63,17 @@ fn main() -> Result<(), anyhow::Error> {
         },
     )?)?;
 
-    task_handler.spawn_reocurring_task(ReoccuringTask::new(
-        "Task2",
-        "*/15 * * * * *",
-        ReoccuringTest {
-            data: 100,
-            name: "2".to_string(),
-        },
-    )?)?;
+    task_handler.spawn_reocurring_task(
+        ReoccuringTask::new(
+            "Task2",
+            "*/15 * * * * *",
+            ReoccuringTest {
+                data: 100,
+                name: "2".to_string(),
+            },
+        )?
+        .run_at_startup(true),
+    )?;
 
     std::thread::sleep(Duration::from_mins(60));
 

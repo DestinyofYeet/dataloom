@@ -11,6 +11,7 @@ where
     ME: MemoryStrategy,
 {
     pub(crate) description: String,
+    pub(crate) run_at_startup: bool,
     pub(crate) schedule: Schedule,
     pub(crate) task: Arc<Mutex<Task<D, ME>>>,
 }
